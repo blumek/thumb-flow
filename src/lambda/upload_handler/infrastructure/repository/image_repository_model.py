@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from image_extension import ImageExtension
+from domain.types.image_extension import ImageExtension
 
 
 @dataclass

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
+from application.use_case.image_upload_use_case_model import StoreImageUseCaseRequest, StoreImageUseCaseReply
+from infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway
+from infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest, StoreImageGatewayReply
 
-from image_persistence_gateway import ImagePersistenceGateway
-from image_persistence_gateway_model import StoreImageGatewayRequest, StoreImageGatewayReply
-from image_upload_use_case_model import StoreImageUseCaseRequest, StoreImageUseCaseReply
 
 
 class UploadImageUseCase(ABC):

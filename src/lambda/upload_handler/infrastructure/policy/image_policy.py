@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from image_persistence_gateway_model import StoreImageGatewayRequest
+from infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest
 
 
 class ImagePolicy(ABC):

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import boto3
 
-from image_repository_model import StoreImageRequest, StoreImageReply
+from infrastructure.repository.image_repository_model import StoreImageRequest, StoreImageReply
 
 logger = logging.getLogger(__name__)
 

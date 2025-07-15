@@ -1,8 +1,8 @@
-from key_factory import ImageKeyFactory, UniqueImageKeyFactory
-from image_repository import ImageRepository, S3ImageRepository, InMemoryImageRepository
-from image_persistence_gateway import ImagePersistenceGateway, S3ImagePersistenceGateway
-from image_policy import ImagePolicy, ImagePolicyComposite, ImagePolicySize, ImagePolicyExtension
-from image_upload_use_case import UploadImageUseCase, UploadImageService
+from infrastructure.factory.key_factory import ImageKeyFactory, UniqueImageKeyFactory
+from infrastructure.repository.image_repository import ImageRepository, S3ImageRepository, InMemoryImageRepository
+from infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway, S3ImagePersistenceGateway
+from infrastructure.policy.image_policy import ImagePolicy, ImagePolicyComposite, ImagePolicySize, ImagePolicyExtension
+from application.use_case.image_upload_use_case import UploadImageUseCase, UploadImageService
 import boto3
 
 

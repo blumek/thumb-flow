@@ -1,11 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
 
-from image_repository import ImageRepository
-from image_repository_model import StoreImageRequest
-from image_persistence_gateway_model import StoreImageGatewayRequest, StoreImageGatewayReply
-from image_policy import ImagePolicy
-from key_factory import ImageKeyFactory
+from infrastructure.repository.image_repository import ImageRepository
+from infrastructure.repository.image_repository_model import StoreImageRequest
+from infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest, StoreImageGatewayReply
+from infrastructure.policy.image_policy import ImagePolicy
+from infrastructure.factory.key_factory import ImageKeyFactory
 
 logger = logging.getLogger(__name__)
 
