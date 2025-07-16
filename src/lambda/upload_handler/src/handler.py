@@ -42,6 +42,6 @@ def __to_store_image_request(event: Dict[str, Any]) -> StoreImageUseCaseRequest:
 
     return StoreImageUseCaseRequest(
         image_name=event['image_name'],
-        image_extension=ImageExtension(event['image_extension']),
+        image_extension=ImageExtension.from_extension(event['image_extension']),
         image_bytes=base64.b64decode(event['image_bytes'])
     )

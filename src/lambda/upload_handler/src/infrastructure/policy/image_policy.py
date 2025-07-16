@@ -32,4 +32,4 @@ class ImagePolicyExtension(ImagePolicy):
         self.allowed_extensions: set[str] = {extension.lower() for extension in allowed_extensions}
 
     def is_valid(self, image_store_request: StoreImageGatewayRequest) -> bool:
-        return image_store_request.image_extension.value.lower() in self.allowed_extensions
+        return image_store_request.image_extension.extension.lower() in self.allowed_extensions
