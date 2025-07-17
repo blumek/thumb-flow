@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest
+from infrastructure.gateway.image_persistence_gateway_model import (
+    StoreImageGatewayRequest,
+)
 
 
 class ImagePolicy(ABC):
@@ -29,7 +31,12 @@ class ImagePolicySize(ImagePolicy):
 
 class ImagePolicyExtension(ImagePolicy):
     def __init__(self, allowed_extensions: set[str]):
-        self.allowed_extensions: set[str] = {extension.lower() for extension in allowed_extensions}
+        self.allowed_extensions: set[str] = {
+            extension.lower() for extension in allowed_extensions
+        }
 
     def is_valid(self, image_store_request: StoreImageGatewayRequest) -> bool:
-        return image_store_request.image_extension.extension.lower() in self.allowed_extensions
+        return (
+            image_store_request.image_extension.extension.lower()
+            in self.allowed_extensions
+        )

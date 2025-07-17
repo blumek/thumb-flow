@@ -3,7 +3,10 @@ from abc import ABC, abstractmethod
 
 import boto3
 
-from infrastructure.repository.image_repository_model import StoreImageRequest, StoreImageReply
+from infrastructure.repository.image_repository_model import (
+    StoreImageRequest,
+    StoreImageReply,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,9 @@ class S3ImageRepository(ImageRepository):
             return StoreImageReply(image_key=request.image_key)
         except Exception as exception:
             logger.error(f"Error occurred while storing image: {exception}")
-            raise S3UploadError(f"Failed to store image: {request.image_key}") from exception
+            raise S3UploadError(
+                f"Failed to store image: {request.image_key}"
+            ) from exception
 
 
 class InMemoryImageRepository(ImageRepository):
