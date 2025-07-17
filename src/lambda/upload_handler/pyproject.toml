@@ -25,6 +25,7 @@ dev = [
     "flake8",
     "mypy",
     "boto3-stubs[essential]",
+    "parameterized",
 ]
 
 [tool.setuptools]
