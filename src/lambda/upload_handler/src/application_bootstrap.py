@@ -1,4 +1,8 @@
+from domain.types.image_extension import ImageExtension
 from infrastructure.factory.key_factory import ImageKeyFactory, UniqueImageKeyFactory
+from infrastructure.policy.composite_image_policy import CompositeImagePolicy
+from infrastructure.policy.extension_image_policy import ExtensionImagePolicy
+from infrastructure.policy.size_image_policy import SizeImagePolicy
 from infrastructure.repository.image_repository import (
     ImageRepository,
     S3ImageRepository,
@@ -8,12 +12,7 @@ from infrastructure.gateway.image_persistence_gateway import (
     ImagePersistenceGateway,
     S3ImagePersistenceGateway,
 )
-from infrastructure.policy.image_policy import (
-    ImagePolicy,
-    ImagePolicyComposite,
-    ImagePolicySize,
-    ImagePolicyExtension,
-)
+from infrastructure.policy.image_policy import ImagePolicy
 from application.use_case.image_upload_use_case import (
     UploadImageUseCase,
     UploadImageService,
@@ -60,9 +59,11 @@ def bucket_name() -> str:
 
 
 def image_policy() -> ImagePolicy:
-    max_size_policy = ImagePolicySize(max_bytes_size=5 * 1024 * 1024)  # 5 MB
-    extension_policy = ImagePolicyExtension(allowed_extensions={"jpg", "jpeg", "png"})
-    return ImagePolicyComposite(max_size_policy, extension_policy)
+    max_size_policy = SizeImagePolicy(max_bytes_size=5 * 1024 * 1024)  # 5 MB
+    extension_policy = ExtensionImagePolicy(
+        allowed_extensions={ImageExtension.PNG, ImageExtension.JPG, ImageExtension.JPEG}
+    )
+    return CompositeImagePolicy(max_size_policy, extension_policy)
 
 
 def key_factory() -> ImageKeyFactory:
