@@ -1,5 +1,13 @@
 FROM public.ecr.aws/lambda/python:3.12
-COPY requirements.txt ${LAMBDA_TASK_ROOT}
-RUN pip install -r requirements.txt
-COPY src/ ${LAMBDA_TASK_ROOT}
+
+WORKDIR /tmp
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+
+RUN pip install --upgrade pip && \
+    pip install build && \
+    python -m build && \
+    pip install dist/*.whl && \
+    cp -r /tmp/src/* ${LAMBDA_TASK_ROOT}/
+
 CMD [ "handler.lambda_handler" ]

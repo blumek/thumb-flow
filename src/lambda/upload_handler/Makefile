@@ -27,7 +27,8 @@ venv: ## Create virtual environment
 	@if [ ! -d "$(VENV_DIR)" ]; then \
 		echo "Creating virtual environment..."; \
 		$(PYTHON) -m venv $(VENV_DIR); \
-		echo "Virtual environment created. Activate it with: source $(VENV_BIN)/activate";
+		echo "Virtual environment created. Activate it with: source $(VENV_BIN)/activate"; \
+	fi
 
 activate: venv ## Show activation instructions
 	@echo "Activate with: source $(VENV_BIN)/activate"
@@ -37,15 +38,14 @@ install: venv ## Install dependencies
 		echo "Please activate virtual environment first: source $(VENV_BIN)/activate"; \
 		exit 1; \
 	fi
-	$(PIP) install -r requirements.txt
+	$(PIP) install -e "."
 
 install-dev: venv ## Install development dependencies
 	@if [ -z "$$VIRTUAL_ENV" ]; then \
 		echo "Please activate virtual environment first: source $(VENV_BIN)/activate"; \
 		exit 1; \
 	fi
-	$(PIP) install -r requirements.txt
-	$(PIP) install pytest pytest-cov black flake8 mypy boto3-stubs[essential]
+	$(PIP) install -e ".[dev]"
 
 test: ## Run tests
 	$(PYTEST) test/ -v --cov=src --cov-report=term-missing
@@ -71,9 +71,10 @@ clean: ## Clean up temporary files
 	rm -rf package/
 
 package: clean ## Create deployment package
+	$(PYTHON) -m pip install build
+	$(PYTHON) -m build
 	mkdir -p package
-	$(PIP) install -r requirements.txt -t package/
-	cp -r src/* package/
+	$(PIP) install dist/*.whl -t package/ --no-deps
 	cd package && zip -r ../$(LAMBDA_NAME).zip .
 
 docker-build: ## Build Docker image
