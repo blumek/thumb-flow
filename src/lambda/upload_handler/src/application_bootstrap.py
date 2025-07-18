@@ -13,10 +13,8 @@ from infrastructure.gateway.image_persistence_gateway import (
     S3ImagePersistenceGateway,
 )
 from infrastructure.policy.image_policy import ImagePolicy
-from application.use_case.image_upload_use_case import (
-    UploadImageUseCase,
-    UploadImageService,
-)
+from application.use_case.image_upload_use_case import UploadImageUseCase
+from application.use_case.image_upload_service import UploadImageService
 import boto3
 
 
