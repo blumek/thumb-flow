@@ -1,8 +1,8 @@
-from domain.types.image_extension import ImageExtension
-from infrastructure.gateway.image_persistence_gateway_model import (
+from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
     StoreImageGatewayRequest,
 )
-from infrastructure.policy.image_policy import ImagePolicy
+from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
 
 
 class ExtensionImagePolicy(ImagePolicy):

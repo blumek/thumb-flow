@@ -1,11 +1,9 @@
 import unittest
 
-from domain.types.image_extension import ImageExtension
-from infrastructure.gateway.image_persistence_gateway_model import (
-    StoreImageGatewayRequest,
-)
-from infrastructure.policy.composite_image_policy import CompositeImagePolicy
-from infrastructure.policy.image_policy import ImagePolicy
+from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest
+from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy import CompositeImagePolicy
+from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
 
 
 class TestImagePolicyComposite(unittest.TestCase):

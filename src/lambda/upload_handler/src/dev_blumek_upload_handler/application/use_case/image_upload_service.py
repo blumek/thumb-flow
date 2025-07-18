@@ -1,12 +1,10 @@
-from abc import ABC, abstractmethod
-
-from application.use_case.image_upload_use_case import UploadImageUseCase
-from application.use_case.image_upload_use_case_model import (
+from dev_blumek_upload_handler.application.use_case.image_upload_use_case import UploadImageUseCase
+from dev_blumek_upload_handler.application.use_case.image_upload_use_case_model import (
     StoreImageUseCaseRequest,
     StoreImageUseCaseReply,
 )
-from infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway
-from infrastructure.gateway.image_persistence_gateway_model import (
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
     StoreImageGatewayRequest,
     StoreImageGatewayReply,
 )

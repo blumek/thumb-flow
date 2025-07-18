@@ -8,9 +8,9 @@ version = "0.1.0"
 description = "AWS Lambda function for handling image uploads"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {text = "Proprietary"}
+license = { text = "Proprietary" }
 authors = [
-    {name = "Szymon Blumczynski"}
+    { name = "Szymon Blumczynski" }
 ]
 dependencies = [
     "boto3>=1.39.4",
@@ -29,8 +29,8 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-packages = {find = {where = ["src"]}}
+package-dir = { "" = "src" }
+packages = { find = { where = ["src"] } }
 
 [tool.black]
 line-length = 88
@@ -51,6 +51,6 @@ ignore_missing_imports = true
 [tool.coverage.run]
 omit = [
     "*__init__.py",
-    "src/application_bootstrap.py",
-    "src/infrastructure/repository/in_memory_image_repository.py",
+    "src/dev_blumek_upload_handler/application_bootstrap.py",
+    "src/dev_blumek_upload_handler/infrastructure/repository/in_memory_image_repository.py",
 ]

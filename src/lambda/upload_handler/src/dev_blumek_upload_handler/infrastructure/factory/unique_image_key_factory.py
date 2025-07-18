@@ -1,6 +1,6 @@
 import uuid
 
-from infrastructure.factory.image_key_factory import ImageKeyFactory
+from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import ImageKeyFactory
 
 
 class UniqueImageKeyFactory(ImageKeyFactory):

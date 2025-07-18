@@ -1,10 +1,8 @@
 import unittest
 
-from domain.types.image_extension import ImageExtension
-from infrastructure.gateway.image_persistence_gateway_model import (
-    StoreImageGatewayRequest,
-)
-from infrastructure.policy.extension_image_policy import (
+from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest
+from dev_blumek_upload_handler.infrastructure.policy.extension_image_policy import (
     ExtensionImagePolicy,
 )
 

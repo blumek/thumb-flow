@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.use_case.image_upload_use_case_model import (
+from dev_blumek_upload_handler.application.use_case.image_upload_use_case_model import (
     StoreImageUseCaseRequest,
     StoreImageUseCaseReply,
 )

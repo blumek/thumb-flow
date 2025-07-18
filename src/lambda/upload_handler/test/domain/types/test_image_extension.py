@@ -2,7 +2,7 @@ import unittest
 from unittest import TestCase
 from parameterized import parameterized
 
-from domain.types.image_extension import ImageExtension
+from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
 
 
 class TestImageExtension(TestCase):

@@ -2,8 +2,8 @@ import logging
 
 import boto3
 
-from infrastructure.repository.image_repository import ImageRepository
-from infrastructure.repository.image_repository_model import (
+from dev_blumek_upload_handler.infrastructure.repository.image_repository import ImageRepository
+from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import (
     StoreImageRequest,
     StoreImageReply,
 )

@@ -1,17 +1,17 @@
 import logging
 
-from infrastructure.factory.image_key_factory import ImageKeyFactory
-from infrastructure.gateway.image_persistence_gateway import (
+from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import ImageKeyFactory
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import (
     ImagePersistenceGateway,
     InvalidImageStoreRequestError,
 )
-from infrastructure.gateway.image_persistence_gateway_model import (
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
     StoreImageGatewayRequest,
     StoreImageGatewayReply,
 )
-from infrastructure.policy.image_policy import ImagePolicy
-from infrastructure.repository.image_repository import ImageRepository
-from infrastructure.repository.image_repository_model import StoreImageRequest
+from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
+from dev_blumek_upload_handler.infrastructure.repository.image_repository import ImageRepository
+from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import StoreImageRequest
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
-from infrastructure.repository.image_repository_model import (
+from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import (
     StoreImageRequest,
     StoreImageReply,
 )
