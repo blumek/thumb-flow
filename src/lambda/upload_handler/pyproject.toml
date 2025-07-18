@@ -19,13 +19,15 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
+    "pytest>=8.0.0",
     "pytest-cov",
     "black",
     "flake8",
     "mypy",
     "boto3-stubs[essential]",
     "parameterized",
+    "pillow",
+    "moto",
 ]
 
 [tool.setuptools]

@@ -45,7 +45,9 @@ from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository imp
 def upload_image_use_case() -> UploadImageUseCase:
     return UploadImageService(
         image_persistence_gateway(
-            image_repository=in_memory_image_repository(),
+            image_repository=s3_image_repository(
+                s3_client=s3_client(), bucket_name=bucket_name()
+            ),
             image_policy=image_policy(),
             key_factory=key_factory(),
         )
@@ -53,9 +55,9 @@ def upload_image_use_case() -> UploadImageUseCase:
 
 
 def image_persistence_gateway(
-        image_repository: ImageRepository,
-        image_policy: ImagePolicy,
-        key_factory: ImageKeyFactory,
+    image_repository: ImageRepository,
+    image_policy: ImagePolicy,
+    key_factory: ImageKeyFactory,
 ) -> ImagePersistenceGateway:
     return S3ImagePersistenceGateway(
         image_repository=image_repository,
@@ -68,7 +70,7 @@ def in_memory_image_repository() -> ImageRepository:
     return InMemoryImageRepository()
 
 
-def image_repository(s3_client: boto3.client, bucket_name: str) -> ImageRepository:
+def s3_image_repository(s3_client: boto3.client, bucket_name: str) -> ImageRepository:
     return S3ImageRepository(s3_client, bucket_name)
 
 
@@ -80,7 +82,7 @@ def s3_client() -> boto3.client:
         "s3",
         aws_access_key_id=aws_access_key,
         aws_secret_access_key=aws_secret_key,
-        region_name=aws_region
+        region_name=aws_region,
     )
 
 

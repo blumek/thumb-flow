@@ -1,5 +1,5 @@
 # Makefile for upload_handler Lambda function
-.PHONY: help install test lint format build clean docker-build docker-run deploy package venv
+.PHONY: help install test lint format build clean docker-build docker-run deploy package venv integration-test localstack-start localstack-stop install-test-deps
 
 # Variables
 LAMBDA_NAME = upload_handler
@@ -15,6 +15,14 @@ VENV_DIR = .venv
 VENV_BIN = $(VENV_DIR)/bin
 VENV_PYTHON = $(VENV_BIN)/python
 VENV_PIP = $(VENV_BIN)/pip
+LOCALSTACK_CONTAINER = upload-handler-localstack
+
+# AWS/LocalStack Configuration
+export AWS_ACCESS_KEY_ID ?= test
+export AWS_SECRET_ACCESS_KEY ?= test
+export AWS_REGION ?= us-east-1
+export AWS_S3_BUCKET_NAME ?= upload-handler-test-bucket
+export AWS_ENDPOINT_URL ?= http://localhost:4566
 
 # Default target
 .DEFAULT_GOAL := help
@@ -47,8 +55,46 @@ install-dev: venv ## Install development dependencies
 	fi
 	$(PIP) install -e ".[dev]"
 
-test: ## Run tests
-	$(PYTEST) test/ -v --cov=src --cov-report=term-missing
+install-test-deps: ## Install dependencies required for tests
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "Please activate virtual environment first: source $(VENV_BIN)/activate"; \
+		exit 1; \
+	fi
+	$(PIP) install pytest pytest-cov pillow boto3 awscli moto
+
+test: ## Run unit tests
+	$(PYTEST) test/ -v --cov=src --cov-report=term-missing --ignore=test/integration
+
+integration-test: install-test-deps ## Run integration tests only
+	$(PYTEST) test/integration -v
+
+integration-test-setup: install-test-deps ## Setup and run integration tests with LocalStack
+	@echo "Setting up environment for integration tests..."
+	$(MAKE) localstack-start
+	@echo "Waiting for LocalStack to be ready..."
+	@sleep 5
+	@echo "Creating test bucket..."
+	aws --endpoint-url=$(AWS_ENDPOINT_URL) s3 mb s3://$(AWS_S3_BUCKET_NAME) || true
+	@echo "Running integration tests..."
+	$(MAKE) integration-test
+	@echo "Cleaning up..."
+	$(MAKE) localstack-stop
+
+localstack-start: ## Start LocalStack in Docker for local testing
+	@echo "Starting LocalStack container..."
+	@docker run -d --rm --name $(LOCALSTACK_CONTAINER) \
+		-p 4566:4566 \
+		-e SERVICES=s3 \
+		-e DEFAULT_REGION=$(AWS_REGION) \
+		-e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
+		localstack/localstack:latest
+
+localstack-stop: ## Stop LocalStack container
+	@echo "Stopping LocalStack container..."
+	@docker stop $(LOCALSTACK_CONTAINER) || true
+
+test-all: install-test-deps test integration-test ## Run all tests (unit and integration)
 
 lint: ## Run linting checks
 	$(FLAKE8) src/ test/ --max-line-length=88 --extend-ignore=E203,W503
@@ -69,6 +115,7 @@ clean: ## Clean up temporary files
 	rm -rf build/
 	rm -rf dist/
 	rm -rf package/
+	$(MAKE) localstack-stop
 
 package: clean ## Create deployment package
 	$(PYTHON) -m pip install build
@@ -93,8 +140,8 @@ docker-stop: ## Stop Docker container
 
 docker-flow: docker-build docker-run docker-test docker-stop ## Full Docker flow
 
-build: format lint test package ## Full build pipeline
+build: format lint test-all package ## Full build pipeline including all tests
 
-check: format-check lint test ## Run all checks without making changes
+check: format-check lint test-all ## Run all checks and tests without making changes
 
 serve: docker-build docker-run ## Build and serve the Lambda function locally
