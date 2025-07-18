@@ -26,14 +26,3 @@ class ImageExtension(Enum):
             if ext_type.extension == normalized_extension:
                 return ext_type
         return None
-
-    @classmethod
-    def get_mime_type(cls, extension: str) -> str:
-        ext_type = cls.from_extension(extension)
-        if ext_type:
-            return ext_type.mime_type
-        return f"image/{extension.lower().lstrip('.')}"
-
-    @classmethod
-    def get_all_extensions(cls) -> set[str]:
-        return {ext_type.extension for ext_type in cls}

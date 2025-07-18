@@ -108,13 +108,6 @@ class TestImageExtension(TestCase):
 
         self.assertIsNone(actual_result)
 
-    def test_get_all_extensions_should_return_all_supported_extensions(self):
-        expected_extensions = {"jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"}
-
-        actual_result = ImageExtension.get_all_extensions()
-
-        self.assertEqual(expected_extensions, actual_result)
-
 
 if __name__ == "__main__":
     unittest.main()
