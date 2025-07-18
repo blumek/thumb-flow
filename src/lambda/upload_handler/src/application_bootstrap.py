@@ -4,11 +4,7 @@ from infrastructure.factory.unique_image_key_factory import UniqueImageKeyFactor
 from infrastructure.policy.composite_image_policy import CompositeImagePolicy
 from infrastructure.policy.extension_image_policy import ExtensionImagePolicy
 from infrastructure.policy.size_image_policy import SizeImagePolicy
-from infrastructure.repository.image_repository import (
-    ImageRepository,
-    S3ImageRepository,
-    InMemoryImageRepository,
-)
+from infrastructure.repository.image_repository import ImageRepository
 from infrastructure.gateway.image_persistence_gateway import (
     ImagePersistenceGateway,
     S3ImagePersistenceGateway,
@@ -17,6 +13,9 @@ from infrastructure.policy.image_policy import ImagePolicy
 from application.use_case.image_upload_use_case import UploadImageUseCase
 from application.use_case.image_upload_service import UploadImageService
 import boto3
+
+from infrastructure.repository.in_memory_image_repository import InMemoryImageRepository
+from infrastructure.repository.s3_image_repository import S3ImageRepository
 
 
 def upload_image_use_case() -> UploadImageUseCase:
