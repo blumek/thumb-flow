@@ -1,7 +1,9 @@
 import re
 import unittest
 
-from dev_blumek_upload_handler.infrastructure.factory.unique_image_key_factory import UniqueImageKeyFactory
+from dev_blumek_upload_handler.infrastructure.factory.unique_image_key_factory import (
+    UniqueImageKeyFactory,
+)
 
 expected_key_pattern = (
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-.*$"

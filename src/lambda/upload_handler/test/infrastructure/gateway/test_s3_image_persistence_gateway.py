@@ -2,15 +2,27 @@ import unittest
 from unittest.mock import Mock
 
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import ImageKeyFactory
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import InvalidImageStoreRequestError
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest, \
-    StoreImageGatewayReply
-from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import S3ImagePersistenceGateway
+from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import (
+    ImageKeyFactory,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import (
+    InvalidImageStoreRequestError,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
+    StoreImageGatewayRequest,
+    StoreImageGatewayReply,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import (
+    S3ImagePersistenceGateway,
+)
 from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
-from dev_blumek_upload_handler.infrastructure.repository.image_repository import ImageRepository
-from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import StoreImageReply, \
-    StoreImageRequest
+from dev_blumek_upload_handler.infrastructure.repository.image_repository import (
+    ImageRepository,
+)
+from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import (
+    StoreImageReply,
+    StoreImageRequest,
+)
 
 
 class TestS3ImagePersistenceGateway(unittest.TestCase):

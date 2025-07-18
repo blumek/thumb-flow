@@ -1,15 +1,21 @@
 import unittest
 from unittest.mock import Mock
 
-from dev_blumek_upload_handler.application.use_case.image_upload_service import UploadImageService
+from dev_blumek_upload_handler.application.use_case.image_upload_service import (
+    UploadImageService,
+)
 from dev_blumek_upload_handler.application.use_case.image_upload_use_case_model import (
     StoreImageUseCaseRequest,
     StoreImageUseCaseReply,
 )
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayReply, \
-    StoreImageGatewayRequest
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import (
+    ImagePersistenceGateway,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
+    StoreImageGatewayReply,
+    StoreImageGatewayRequest,
+)
 
 
 class TestImageUploadUseCase(unittest.TestCase):

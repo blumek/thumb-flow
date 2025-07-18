@@ -2,8 +2,10 @@ import unittest
 from unittest.mock import Mock
 
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import StoreImageRequest, \
-    StoreImageReply
+from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import (
+    StoreImageRequest,
+    StoreImageReply,
+)
 from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository import (
     S3ImageRepository,
     S3UploadError,

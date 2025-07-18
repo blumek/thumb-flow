@@ -1,19 +1,43 @@
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import ImageKeyFactory
-from dev_blumek_upload_handler.infrastructure.factory.unique_image_key_factory import UniqueImageKeyFactory
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import ImagePersistenceGateway
-from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import S3ImagePersistenceGateway
-from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy import CompositeImagePolicy
-from dev_blumek_upload_handler.infrastructure.policy.extension_image_policy import ExtensionImagePolicy
-from dev_blumek_upload_handler.application.use_case.image_upload_use_case import UploadImageUseCase
-from dev_blumek_upload_handler.application.use_case.image_upload_service import UploadImageService
+from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import (
+    ImageKeyFactory,
+)
+from dev_blumek_upload_handler.infrastructure.factory.unique_image_key_factory import (
+    UniqueImageKeyFactory,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway import (
+    ImagePersistenceGateway,
+)
+from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import (
+    S3ImagePersistenceGateway,
+)
+from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy import (
+    CompositeImagePolicy,
+)
+from dev_blumek_upload_handler.infrastructure.policy.extension_image_policy import (
+    ExtensionImagePolicy,
+)
+from dev_blumek_upload_handler.application.use_case.image_upload_use_case import (
+    UploadImageUseCase,
+)
+from dev_blumek_upload_handler.application.use_case.image_upload_service import (
+    UploadImageService,
+)
 import boto3
 
 from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
-from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import SizeImagePolicy
-from dev_blumek_upload_handler.infrastructure.repository.image_repository import ImageRepository
-from dev_blumek_upload_handler.infrastructure.repository.in_memory_image_repository import InMemoryImageRepository
-from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository import S3ImageRepository
+from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import (
+    SizeImagePolicy,
+)
+from dev_blumek_upload_handler.infrastructure.repository.image_repository import (
+    ImageRepository,
+)
+from dev_blumek_upload_handler.infrastructure.repository.in_memory_image_repository import (
+    InMemoryImageRepository,
+)
+from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository import (
+    S3ImageRepository,
+)
 
 
 def upload_image_use_case() -> UploadImageUseCase:

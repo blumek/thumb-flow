@@ -1,8 +1,12 @@
 import unittest
 
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import StoreImageGatewayRequest
-from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import SizeImagePolicy
+from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway_model import (
+    StoreImageGatewayRequest,
+)
+from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import (
+    SizeImagePolicy,
+)
 
 
 class TestSizeImagePolicy(unittest.TestCase):

@@ -1,4 +1,6 @@
-from dev_blumek_upload_handler.infrastructure.repository.image_repository import ImageRepository
+from dev_blumek_upload_handler.infrastructure.repository.image_repository import (
+    ImageRepository,
+)
 from dev_blumek_upload_handler.infrastructure.repository.image_repository_model import (
     StoreImageRequest,
     StoreImageReply,
