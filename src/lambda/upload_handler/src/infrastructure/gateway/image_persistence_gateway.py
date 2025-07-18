@@ -8,7 +8,7 @@ from infrastructure.gateway.image_persistence_gateway_model import (
     StoreImageGatewayReply,
 )
 from infrastructure.policy.image_policy import ImagePolicy
-from infrastructure.factory.key_factory import ImageKeyFactory
+from infrastructure.factory.image_key_factory import ImageKeyFactory
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 from domain.types.image_extension import ImageExtension
-from infrastructure.factory.key_factory import ImageKeyFactory, UniqueImageKeyFactory
+from infrastructure.factory.image_key_factory import ImageKeyFactory
+from infrastructure.factory.unique_image_key_factory import UniqueImageKeyFactory
 from infrastructure.policy.composite_image_policy import CompositeImagePolicy
 from infrastructure.policy.extension_image_policy import ExtensionImagePolicy
 from infrastructure.policy.size_image_policy import SizeImagePolicy

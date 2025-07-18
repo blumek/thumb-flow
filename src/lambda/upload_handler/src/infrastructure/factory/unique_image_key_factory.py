@@ -1,11 +1,6 @@
 import uuid
-from abc import ABC, abstractmethod
 
-
-class ImageKeyFactory(ABC):
-    @abstractmethod
-    def create_key(self, image_name: str) -> str:
-        pass
+from infrastructure.factory.image_key_factory import ImageKeyFactory
 
 
 class UniqueImageKeyFactory(ImageKeyFactory):
