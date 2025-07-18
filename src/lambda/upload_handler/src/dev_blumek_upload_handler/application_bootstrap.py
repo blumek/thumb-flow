@@ -1,3 +1,13 @@
+import os
+
+import boto3
+
+from dev_blumek_upload_handler.application.use_case.image_upload_service import (
+    UploadImageService,
+)
+from dev_blumek_upload_handler.application.use_case.image_upload_use_case import (
+    UploadImageUseCase,
+)
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
 from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import (
     ImageKeyFactory,
@@ -17,14 +27,6 @@ from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy impo
 from dev_blumek_upload_handler.infrastructure.policy.extension_image_policy import (
     ExtensionImagePolicy,
 )
-from dev_blumek_upload_handler.application.use_case.image_upload_use_case import (
-    UploadImageUseCase,
-)
-from dev_blumek_upload_handler.application.use_case.image_upload_service import (
-    UploadImageService,
-)
-import boto3
-
 from dev_blumek_upload_handler.infrastructure.policy.image_policy import ImagePolicy
 from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import (
     SizeImagePolicy,
@@ -51,9 +53,9 @@ def upload_image_use_case() -> UploadImageUseCase:
 
 
 def image_persistence_gateway(
-    image_repository: ImageRepository,
-    image_policy: ImagePolicy,
-    key_factory: ImageKeyFactory,
+        image_repository: ImageRepository,
+        image_policy: ImagePolicy,
+        key_factory: ImageKeyFactory,
 ) -> ImagePersistenceGateway:
     return S3ImagePersistenceGateway(
         image_repository=image_repository,
@@ -75,7 +77,7 @@ def s3_client() -> boto3.client:
 
 
 def bucket_name() -> str:
-    return "your-s3-bucket-name"
+    return load_variable("UPLOAD_HANDLER_S3_BUCKET_NAME")
 
 
 def image_policy() -> ImagePolicy:
@@ -88,3 +90,10 @@ def image_policy() -> ImagePolicy:
 
 def key_factory() -> ImageKeyFactory:
     return UniqueImageKeyFactory()
+
+
+def load_variable(variable_name: str, default_value: str = None) -> str:
+    value = os.getenv(variable_name, default_value)
+    if value is None:
+        raise ValueError(f"Environment variable '{variable_name}' is not set.")
+    return value
