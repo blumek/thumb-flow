@@ -1,7 +1,7 @@
 # Build stage
 FROM public.ecr.aws/lambda/python:3.12 AS builder
 WORKDIR /tmp
-COPY pyproject.toml README.md ./
+COPY pyproject.toml ./
 COPY src/ ./src/
 RUN pip install --upgrade pip && \
     pip install build && \
