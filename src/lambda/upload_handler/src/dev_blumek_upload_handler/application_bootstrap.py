@@ -73,11 +73,19 @@ def image_repository(s3_client: boto3.client, bucket_name: str) -> ImageReposito
 
 
 def s3_client() -> boto3.client:
-    return boto3.client("s3")
+    aws_access_key = load_variable("AWS_ACCESS_KEY_ID")
+    aws_secret_key = load_variable("AWS_SECRET_ACCESS_KEY")
+    aws_region = load_variable("AWS_REGION")
+    return boto3.client(
+        "s3",
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+        region_name=aws_region
+    )
 
 
 def bucket_name() -> str:
-    return load_variable("UPLOAD_HANDLER_S3_BUCKET_NAME")
+    return load_variable("AWS_S3_BUCKET_NAME")
 
 
 def image_policy() -> ImagePolicy:
