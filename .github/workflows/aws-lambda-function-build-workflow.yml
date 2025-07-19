@@ -1,0 +1,72 @@
+name: AWS Lambda Function Build and Push Workflow
+
+on:
+  workflow_call:
+    inputs:
+      component-path:
+        description: 'Path to the component to build'
+        required: true
+        type: string
+      component-name:
+        description: 'Name of the component for tagging'
+        required: true
+        type: string
+      repository-name:
+        description: 'ECR repository name'
+        required: true
+        type: string
+      dockerfile-path:
+        description: 'Path to the Dockerfile'
+        required: false
+        type: string
+        default: 'Dockerfile'
+    outputs:
+      image-uri:
+        description: "The URI of the built and pushed image"
+        value: ${{ jobs.build-and-push.outputs.image_uri }}
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+
+env:
+  AWS_REGION: eu-central-1
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    name: Build and Push ${{ inputs.component-name }}
+    runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.build-component.outputs.image }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push component
+        id: build-component
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY_NAME: ${{ inputs.repository-name }}
+        run: |
+          aws ecr describe-repositories --repository-names $REPOSITORY_NAME || \
+          aws ecr create-repository --repository-name $REPOSITORY_NAME
+          
+          docker build -t $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
+            -t $ECR_REGISTRY/$REPOSITORY_NAME:latest \
+            -f ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} ${{ inputs.component-path }}/
+          
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:latest
+          
+          echo "image=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
