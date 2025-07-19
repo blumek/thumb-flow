@@ -1,0 +1,89 @@
+name: ThumbFlow CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+      - stage
+      - main
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - main
+
+env:
+  AWS_REGION: eu-central-1
+  IMAGE_TAG: ${{ github.sha }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+    steps:
+      - id: set-env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/stage" ]]; then
+            echo "environment=stage" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+  test-upload-handler:
+    name: Test Upload Handler
+    uses: ./.github/workflows/aws-lambda-function-test.yml
+    with:
+      component-path: src/lambda/upload_handler
+      component-name: upload-handler
+      python-version: '3.12'
+
+  build-upload-handler:
+    name: Build Upload Handler
+    needs: test-upload-handler
+    uses: ./.github/workflows/aws-lambda-function-build-workflow.yml
+    with:
+      component-path: src/lambda/upload_handler
+      component-name: upload-handler
+      repository-name: blumek/upload-handler
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  terraform-plan:
+    name: Terraform Plan
+    if: false # Disable plan step for now
+    needs: [determine-environment, build-upload-handler]
+    uses: ./.github/workflows/terraform-workflow.yml
+    with:
+      environment: ${{ needs.determine-environment.outputs.environment }}
+      apply: false
+      terraform-version: '1.12.2'
+      image-variables: >
+        {
+          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
+        }
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  terraform-apply:
+    name: Terraform Apply
+    if: github.event_name == 'push'
+    needs: [determine-environment, build-upload-handler, terraform-plan]
+    uses: ./.github/workflows/terraform-workflow.yml
+    with:
+      environment: ${{ needs.determine-environment.outputs.environment }}
+      apply: true
+      terraform-version: '1.12.2'
+      image-variables: >
+        {
+          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
+        }
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
