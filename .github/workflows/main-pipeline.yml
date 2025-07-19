@@ -3,14 +3,12 @@ name: ThumbFlow CI/CD Pipeline
 on:
   push:
     branches:
-      - dev
-      - stage
-      - main
+      - develop
+      - master
   pull_request:
     branches:
-      - dev
-      - stage
-      - main
+      - develop
+      - master
 
 env:
   AWS_REGION: eu-central-1
@@ -29,10 +27,8 @@ jobs:
     steps:
       - id: set-env
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "environment=prod" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == "refs/heads/stage" ]]; then
-            echo "environment=stage" >> $GITHUB_OUTPUT
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
