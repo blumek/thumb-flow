@@ -18,7 +18,9 @@ VENV_PIP = $(VENV_BIN)/pip
 LOCALSTACK_CONTAINER = upload-handler-localstack
 
 # AWS/LocalStack Configuration
-export AWS_REGION ?= us-central-1
+export AWS_ACCESS_KEY_ID ?= test
+export AWS_SECRET_ACCESS_KEY ?= test
+export AWS_REGION ?= us-east-1
 export AWS_S3_BUCKET_NAME ?= upload-handler-test-bucket
 export AWS_ENDPOINT_URL ?= http://localhost:4566
 

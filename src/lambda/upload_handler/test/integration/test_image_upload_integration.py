@@ -16,7 +16,9 @@ class TestImageUploadIntegration:
     def s3_client(self) -> boto3.client:
         return boto3.client(
             "s3",
-            region_name=os.environ.get("AWS_REGION", "us-central-1"),
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
+            region_name=os.environ.get("AWS_REGION", "us-east-1"),
             endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566"),
         )
 
@@ -25,7 +27,9 @@ class TestImageUploadIntegration:
         bucket_name: str = os.environ.get("AWS_S3_BUCKET_NAME", "test-bucket")
         s3: boto3.client = boto3.client(
             "s3",
-            region_name=os.environ.get("AWS_REGION", "us-central-1"),
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
+            region_name=os.environ.get("AWS_REGION", "us-east-1"),
             endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566"),
         )
         try:
