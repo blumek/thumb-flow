@@ -60,7 +60,10 @@ jobs:
       environment: ${{ needs.determine-environment.outputs.environment }}
       apply: false
       terraform-version: '1.12.2'
-      image-variables: ${{ toJson({ upload_handler_image_uri = needs.build-upload-handler.outputs.image-uri }) }}
+      image-variables: |
+        {
+          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
+        }
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
@@ -73,6 +76,9 @@ jobs:
       environment: ${{ needs.determine-environment.outputs.environment }}
       apply: true
       terraform-version: '1.12.2'
-      image-variables: ${{ toJson({ upload_handler_image_uri = needs.build-upload-handler.outputs.image-uri }) }}
+      image-variables: |
+        {
+          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
+        }
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
