@@ -59,6 +59,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY_NAME: ${{ inputs.repository-name }}
         run: |
+          # Wyświetl wartości zmiennych dla weryfikacji
+          echo "ECR_REGISTRY: $ECR_REGISTRY"
+          echo "REPOSITORY_NAME: $REPOSITORY_NAME"
+
           aws ecr describe-repositories --repository-names $REPOSITORY_NAME || \
           aws ecr create-repository --repository-name $REPOSITORY_NAME
 
@@ -68,5 +72,16 @@ jobs:
           docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
 
           FULL_IMAGE_URI="$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}"
+          echo "FULL_IMAGE_URI: $FULL_IMAGE_URI"
+
+          # Upewnij się, że wartość nie jest pusta
+          if [ -z "$FULL_IMAGE_URI" ]; then
+            echo "BŁĄD: FULL_IMAGE_URI jest pusty!"
+            exit 1
+          fi
+
           echo "image-uri=$FULL_IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "image-uri: $FULL_IMAGE_URI"
+
+          # Sprawdź czy output został ustawiony
+          echo "Sprawdzanie ustawionego outputu:"
+          cat $GITHUB_OUTPUT

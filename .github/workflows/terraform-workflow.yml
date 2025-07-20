@@ -65,8 +65,18 @@ jobs:
             INPUT_JSON=$(echo '${{ inputs.image-variables }}' | tr -d '\n\r' | sed 's/\\/\\\\/g')
             echo "Przetworzony JSON: $INPUT_JSON"
 
-            # Bezpośrednie ustawienie zmiennych z JSON
-            echo "$INPUT_JSON" | jq -r 'try fromjson catch . | if type == "object" then to_entries | .[] | "TF_VAR_\(.key)=\(.value)" else empty end' >> $GITHUB_ENV
+            # Sprawdź zawartość JSON
+            jq . <<< "$INPUT_JSON" || echo "Nieprawidłowy format JSON"
+
+            # Sprawdź konkretną wartość
+            UPLOAD_HANDLER_URI=$(jq -r '.upload_handler_image_uri // empty' <<< "$INPUT_JSON")
+            echo "Wyodrębnione URI handlera: '$UPLOAD_HANDLER_URI'"
+
+            if [ -z "$UPLOAD_HANDLER_URI" ]; then
+              echo "OSTRZEŻENIE: upload_handler_image_uri jest puste lub nie istnieje w JSON!"
+            else
+              echo "TF_VAR_upload_handler_image_uri=$UPLOAD_HANDLER_URI" >> $GITHUB_ENV
+            fi
 
             # Wyświetl ustawione zmienne dla weryfikacji
             echo "Ustawiono następujące zmienne TF_VAR:"
