@@ -54,31 +54,25 @@ jobs:
 
   terraform-plan:
     name: Terraform Plan
-    needs: [determine-environment, build-upload-handler]
+    needs: [ determine-environment, build-upload-handler ]
     uses: ./.github/workflows/terraform-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
       apply: false
       terraform-version: '1.12.2'
-      image-variables: >
-        {
-          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
-        }
+      image-variables: ${{ toJson({ upload_handler_image_uri = needs.build-upload-handler.outputs.image-uri }) }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   terraform-apply:
     name: Terraform Apply
     if: github.event_name == 'push'
-    needs: [determine-environment, build-upload-handler, terraform-plan]
+    needs: [ determine-environment, build-upload-handler, terraform-plan ]
     uses: ./.github/workflows/terraform-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
       apply: true
       terraform-version: '1.12.2'
-      image-variables: >
-        {
-          "upload_handler_image_uri": "${{ needs.build-upload-handler.outputs.image-uri }}"
-        }
+      image-variables: ${{ toJson({ upload_handler_image_uri = needs.build-upload-handler.outputs.image-uri }) }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}

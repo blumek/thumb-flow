@@ -53,7 +53,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: ${{ inputs.python-version }}
+          terraform_version: ${{ inputs.terraform-version }}
 
       - name: Set image variables
         id: set-vars
