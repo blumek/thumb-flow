@@ -1,0 +1,29 @@
+# Pliki stanu Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfplan
+*.lock.hcl
+
+# Katalog .terraform
+**/.terraform/*
+
+# Pliki logów
+crash.log
+crash.*.log
+
+# Pliki override
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Pliki konfiguracyjne CLI
+.terraformrc
+terraform.rc
+
+# Pliki blokad (opcjonalnie możesz je śledzić)
+# .terraform.lock.hcl
+
+# Pliki systemowe
+.DS_Store
