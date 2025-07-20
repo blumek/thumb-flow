@@ -60,7 +60,7 @@ jobs:
         run: |
           # Parse the JSON input and create TF_VAR_ environment variables
           if [[ -n "${{ inputs.image-variables }}" ]]; then
-            echo '${{ toJSON(inputs.image-variables) }}' | jq -r 'to_entries | .[] | "TF_VAR_\(.key)=\(.value)"' >> $GITHUB_ENV
+            echo "${{ inputs.image-variables }}" | jq -r 'fromjson | to_entries | .[] | "TF_VAR_\(.key)=\(.value)"' >> $GITHUB_ENV
           fi
 
       - name: Terraform Init
