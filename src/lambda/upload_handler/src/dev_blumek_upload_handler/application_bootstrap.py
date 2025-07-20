@@ -55,9 +55,9 @@ def upload_image_use_case() -> UploadImageUseCase:
 
 
 def image_persistence_gateway(
-        image_repository: ImageRepository,
-        image_policy: ImagePolicy,
-        key_factory: ImageKeyFactory,
+    image_repository: ImageRepository,
+    image_policy: ImagePolicy,
+    key_factory: ImageKeyFactory,
 ) -> ImagePersistenceGateway:
     return S3ImagePersistenceGateway(
         image_repository=image_repository,
