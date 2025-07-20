@@ -23,7 +23,7 @@ on:
     outputs:
       image-uri:
         description: "The URI of the built and pushed image"
-        value: ${{ jobs.build-and-push.outputs.image_uri }}
+        value: ${{ jobs.build-and-push.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -37,7 +37,7 @@ jobs:
     name: Build and Push ${{ inputs.component-name }}
     runs-on: ubuntu-latest
     outputs:
-      image_uri: ${{ steps.build-component.outputs.image }}
+      image-uri: ${{ steps.build-component.outputs.image-uri }}
 
     steps:
       - name: Checkout repository
@@ -61,10 +61,12 @@ jobs:
         run: |
           aws ecr describe-repositories --repository-names $REPOSITORY_NAME || \
           aws ecr create-repository --repository-name $REPOSITORY_NAME
-          
+
           docker build -t $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
             -f ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} ${{ inputs.component-path }}/
-          
+
           docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
-          
-          echo "image=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
+          FULL_IMAGE_URI="$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}"
+          echo "image-uri=$FULL_IMAGE_URI" >> $GITHUB_OUTPUT
+          echo "image-uri: $FULL_IMAGE_URI"
