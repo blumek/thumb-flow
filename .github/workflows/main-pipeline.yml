@@ -54,7 +54,6 @@ jobs:
 
   terraform-plan:
     name: Terraform Plan
-    if: false # Disable plan step for now
     needs: [determine-environment, build-upload-handler]
     uses: ./.github/workflows/terraform-workflow.yml
     with:

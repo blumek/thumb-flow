@@ -30,7 +30,7 @@ on:
 
 env:
   AWS_REGION: eu-central-1
-  IMAGE_TAG: ${{ github.sha }}
+  IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}
 
 jobs:
   build-and-push:
@@ -63,10 +63,8 @@ jobs:
           aws ecr create-repository --repository-name $REPOSITORY_NAME
           
           docker build -t $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
-            -t $ECR_REGISTRY/$REPOSITORY_NAME:latest \
             -f ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} ${{ inputs.component-path }}/
           
           docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
-          docker push $ECR_REGISTRY/$REPOSITORY_NAME:latest
           
           echo "image=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
