@@ -55,9 +55,9 @@ def upload_image_use_case() -> UploadImageUseCase:
 
 
 def image_persistence_gateway(
-    image_repository: ImageRepository,
-    image_policy: ImagePolicy,
-    key_factory: ImageKeyFactory,
+        image_repository: ImageRepository,
+        image_policy: ImagePolicy,
+        key_factory: ImageKeyFactory,
 ) -> ImagePersistenceGateway:
     return S3ImagePersistenceGateway(
         image_repository=image_repository,
@@ -75,15 +75,7 @@ def s3_image_repository(s3_client: boto3.client, bucket_name: str) -> ImageRepos
 
 
 def s3_client() -> boto3.client:
-    aws_access_key = load_variable("AWS_ACCESS_KEY_ID")
-    aws_secret_key = load_variable("AWS_SECRET_ACCESS_KEY")
-    aws_region = load_variable("AWS_REGION")
-    return boto3.client(
-        "s3",
-        aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key,
-        region_name=aws_region,
-    )
+    return boto3.client("s3")
 
 
 def bucket_name() -> str:
