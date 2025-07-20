@@ -78,7 +78,7 @@ class TestImageUploadIntegration:
         return MockLambdaContext()
 
     def then_process_passes_as_expected(
-            self, actual_response: dict[str, str], s3_bucket: str, s3_client: boto3.client
+        self, actual_response: dict[str, str], s3_bucket: str, s3_client: boto3.client
     ):
         assert actual_response["statusCode"] == 200
         assert "image_key" in actual_response
