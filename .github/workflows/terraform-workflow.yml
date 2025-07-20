@@ -57,10 +57,12 @@ jobs:
 
       - name: Set image variables
         id: set-vars
+        env:
+          IMAGE_VARS: ${{ inputs.image-variables }}
         run: |
           # Parse the JSON input and create TF_VAR_ environment variables
-          if [[ -n "${{ inputs.image-variables }}" ]]; then
-            echo "${{ inputs.image-variables }}" | jq -r 'to_entries | .[] | "TF_VAR_\(.key)=\(.value)"' >> $GITHUB_ENV
+          if [[ -n "$IMAGE_VARS" ]]; then
+            echo "$IMAGE_VARS" | jq -r 'fromjson | to_entries | .[] | "TF_VAR_\(.key)=\(.value)"' >> $GITHUB_ENV
           fi
 
       - name: Terraform Init
