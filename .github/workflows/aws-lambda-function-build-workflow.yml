@@ -72,7 +72,7 @@ jobs:
             --tag $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
             --tag $ECR_REGISTRY/$REPOSITORY_NAME:latest \
             --file ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} \
-            --context ${{ inputs.component-path }}/ \
-            --push
+            --push \
+            ${{ inputs.component-path }}/
           
           echo "image-uri=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
