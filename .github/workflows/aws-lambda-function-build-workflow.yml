@@ -58,60 +58,15 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY_NAME: ${{ inputs.repository-name }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
-          # Sprawdź czy logowanie do ECR powiodło się
-          if [ -z "$ECR_REGISTRY" ]; then
-            echo "BŁĄD: ECR_REGISTRY jest pusty! Logowanie do ECR nie powiodło się."
-            exit 1
-          fi
-
-          echo "ECR_REGISTRY: $ECR_REGISTRY"
-          echo "REPOSITORY_NAME: $REPOSITORY_NAME"
-          echo "IMAGE_TAG: $IMAGE_TAG"
-
           aws ecr describe-repositories --repository-names $REPOSITORY_NAME || \
           aws ecr create-repository --repository-name $REPOSITORY_NAME
-
-          # Sprawdzenie czy repo istnieje po tworzeniu
-          if ! aws ecr describe-repositories --repository-names $REPOSITORY_NAME; then
-            echo "BŁĄD: Nie można utworzyć lub znaleźć repozytorium ECR!"
-            exit 1
-          fi
-
-          # Debugowanie ścieżki do Dockerfile
-          echo "Ścieżka do Dockerfile: ${{ inputs.component-path }}/${{ inputs.dockerfile-path }}"
-          ls -la ${{ inputs.component-path }}/
-
-          # Budowanie z pełnym debugowaniem
-          set -x
-          docker build -t $ECR_REGISTRY/$REPOSITORY_NAME:$IMAGE_TAG \
+          
+          docker build -t $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
+            -t $ECR_REGISTRY/$REPOSITORY_NAME:latest \
             -f ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} ${{ inputs.component-path }}/
-          build_status=$?
-          set +x
-
-          if [ $build_status -ne 0 ]; then
-            echo "BŁĄD: Budowanie obrazu Docker nie powiodło się!"
-            exit 1
-          fi
-
-          # Push z pełnym debugowaniem
-          set -x
-          docker push $ECR_REGISTRY/$REPOSITORY_NAME:$IMAGE_TAG
-          push_status=$?
-          set +x
-
-          if [ $push_status -ne 0 ]; then
-            echo "BŁĄD: Publikowanie obrazu Docker nie powiodło się!"
-            exit 1
-          fi
-
-          # Ustaw output - oba sposoby dla kompatybilności
-          FULL_IMAGE_URI="$ECR_REGISTRY/$REPOSITORY_NAME:$IMAGE_TAG"
-          echo "FULL_IMAGE_URI: $FULL_IMAGE_URI"
-
-          echo "image-uri=$FULL_IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "::set-output name=image-uri::$FULL_IMAGE_URI"
-
-          echo "Zawartość GITHUB_OUTPUT:"
-          cat $GITHUB_OUTPUT
+          
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:latest
+          
+          echo "image-uri=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
