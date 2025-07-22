@@ -11,6 +11,9 @@ on:
         description: 'Lambda function image URI'
         required: true
         type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
 
 env:
   AWS_REGION: eu-central-1
