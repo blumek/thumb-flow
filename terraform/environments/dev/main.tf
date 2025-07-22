@@ -10,6 +10,11 @@ module "thumb_flow" {
   upload_handler_function_name = "thumbflow-upload-handler-dev"
   upload_handler_image_uri     = var.upload_handler_image_uri
 
+  # Security configurations for dev environment
+  enable_access_logging = false  # Disabled for dev to save costs
+  logging_bucket = null
+  enable_cross_region_replication = false  # Not needed for dev
+
   tags = {
     Project     = "ThumbFlow"
     Environment = "dev"

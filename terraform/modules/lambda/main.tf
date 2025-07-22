@@ -6,11 +6,35 @@ resource "aws_lambda_function" "this" {
   memory_size   = var.memory_size
   role          = aws_iam_role.lambda_execution_role.arn
 
+  # Security configurations
+  reserved_concurrent_executions = var.reserved_concurrent_executions
+  kms_key_arn = var.kms_key_arn
+  code_signing_config_arn = var.enable_code_signing && var.code_signing_config_arn != null ? var.code_signing_config_arn : null
+
+  dynamic "dead_letter_config" {
+    for_each = var.enable_dlq && var.dlq_target_arn != null ? [1] : []
+    content {
+      target_arn = var.dlq_target_arn
+    }
+  }
+
+  dynamic "vpc_config" {
+    for_each = var.enable_vpc_config ? [1] : []
+    content {
+      subnet_ids         = var.vpc_subnet_ids
+      security_group_ids = var.vpc_security_group_ids
+    }
+  }
+
   dynamic "environment" {
     for_each = length(var.environment_variables) > 0 ? [1] : []
     content {
       variables = var.environment_variables
     }
+  }
+
+  tracing_config {
+    mode = var.enable_xray_tracing ? "Active" : "PassThrough"
   }
 
   tags = var.tags
