@@ -10,13 +10,10 @@ on:
       - develop
       - master
 
-env:
-  AWS_REGION: eu-central-1
-  IMAGE_TAG: ${{ github.sha }}
-
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 jobs:
   determine-environment:
@@ -39,7 +36,6 @@ jobs:
     with:
       component-path: src/lambda/upload_handler
       component-name: upload-handler
-      python-version: '3.12'
 
   build-upload-handler:
     name: Build Upload Handler
@@ -49,5 +45,27 @@ jobs:
       component-path: src/lambda/upload_handler
       component-name: upload-handler
       repository-name: blumek/upload-handler
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  terraform-plan:
+    name: Terraform Plan
+    if: github.event_name == 'pull_request'
+    needs: [determine-environment, build-upload-handler]
+    uses: ./.github/workflows/terraform-plan.yml
+    with:
+      environment: ${{ needs.determine-environment.outputs.environment }}
+      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  terraform-apply:
+    name: Terraform Apply
+    if: github.event_name == 'push'
+    needs: [determine-environment, build-upload-handler]
+    uses: ./.github/workflows/terraform-apply.yml
+    with:
+      environment: ${{ needs.determine-environment.outputs.environment }}
+      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
