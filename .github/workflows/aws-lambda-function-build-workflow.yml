@@ -64,15 +64,14 @@ jobs:
         run: |
           aws ecr describe-repositories --repository-names $REPOSITORY_NAME || \
           aws ecr create-repository --repository-name $REPOSITORY_NAME
-          
-          docker buildx build \
-            --platform linux/amd64 \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=max \
+
+          docker build \
             --tag $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }} \
             --tag $ECR_REGISTRY/$REPOSITORY_NAME:latest \
             --file ${{ inputs.component-path }}/${{ inputs.dockerfile-path }} \
-            --push \
             ${{ inputs.component-path }}/
-          
+
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$REPOSITORY_NAME:latest
+
           echo "image-uri=$ECR_REGISTRY/$REPOSITORY_NAME:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
