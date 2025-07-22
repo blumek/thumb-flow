@@ -22,7 +22,6 @@ env:
 permissions:
   id-token: write
   contents: read
-  deployments: write
 
 jobs:
   terraform-security-scan:
