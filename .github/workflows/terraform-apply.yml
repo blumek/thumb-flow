@@ -1,0 +1,93 @@
+name: Terraform Apply
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to apply to'
+        required: true
+        type: string
+      image-uri:
+        description: 'Lambda function image URI'
+        required: true
+        type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+
+env:
+  AWS_REGION: eu-central-1
+  TF_VERSION: '1.12.2'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-apply:
+    name: Apply to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: https://console.aws.amazon.com/lambda
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: |
+          terraform plan -detailed-exitcode -no-color \
+            -var="upload_handler_image_uri=${{ inputs.image-uri }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        id: output
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: |
+          echo 'OUTPUTS<<EOF' >> $GITHUB_OUTPUT
+          terraform output >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Create Deployment Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: deployment } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ inputs.environment }}',
+              description: 'Deploy to ${{ inputs.environment }} environment',
+              auto_merge: false,
+              required_contexts: []
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+              state: 'success',
+              description: 'Successfully deployed to ${{ inputs.environment }}',
+              environment_url: 'https://console.aws.amazon.com/lambda'
+            });
