@@ -2,7 +2,7 @@ module "raw_images_bucket" {
   source = "../s3"
 
   bucket_name = var.raw_bucket_name
-  tags = merge(var.tags, { Environment = var.environment })
+  tags        = merge(var.tags, { Environment = var.environment })
 
   enable_notification = false
 }

@@ -5,8 +5,8 @@ variable "bucket_name" {
 
 variable "tags" {
   description = "A map of tags to apply to the S3 bucket"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "enable_notification" {

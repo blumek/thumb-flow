@@ -20,6 +20,6 @@ variable "upload_handler_image_uri" {
 
 variable "tags" {
   description = "Tags to apply to the Lambda functions and S3 buckets"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }

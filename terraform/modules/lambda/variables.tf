@@ -22,14 +22,14 @@ variable "memory_size" {
 
 variable "environment_variables" {
   description = "A map of environment variables to set for the Lambda function"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "tags" {
   description = "A map of tags to apply to the Lambda function"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "s3_events_permissions" {
