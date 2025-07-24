@@ -22,6 +22,7 @@ env:
 permissions:
   id-token: write
   contents: read
+  deployments: write
 
 jobs:
   terraform-apply:
@@ -32,7 +33,7 @@ jobs:
       url: https://console.aws.amazon.com/lambda
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Configure AWS credentials
