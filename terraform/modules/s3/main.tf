@@ -26,6 +26,6 @@ resource "aws_s3_bucket_notification" "this" {
 
   lambda_function {
     lambda_function_arn = var.notification_lambda_arn
-    events = ["s3:ObjectCreated:*"]
+    events              = ["s3:ObjectCreated:*"]
   }
 }
