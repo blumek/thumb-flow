@@ -23,10 +23,12 @@ jobs:
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
     steps:
-      - name: Set environment based on branch
+      - name: Set environment based on branch or PR target
         id: set-env
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.base_ref }}" == "master" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "environment=prod" >> $GITHUB_OUTPUT
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
@@ -34,7 +36,7 @@ jobs:
 
   test-upload-handler:
     name: Test Upload Handler
-    uses: ./.github/workflows/aws-lambda-function-test.yml
+    uses: ./.github/workflows/aws-lambda-function-test-workflow.yml
     with:
       component-path: src/lambda/upload_handler
       component-name: upload-handler
@@ -53,8 +55,8 @@ jobs:
   terraform-plan:
     name: Terraform Plan (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'pull_request'
-    needs: [determine-environment, build-upload-handler]
-    uses: ./.github/workflows/terraform-plan.yml
+    needs: [ determine-environment, build-upload-handler ]
+    uses: ./.github/workflows/terraform-plan-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
       image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
@@ -64,8 +66,8 @@ jobs:
   terraform-apply:
     name: Terraform Apply (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'push'
-    needs: [determine-environment, build-upload-handler]
-    uses: ./.github/workflows/terraform-apply.yml
+    needs: [ determine-environment, build-upload-handler ]
+    uses: ./.github/workflows/terraform-apply-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
       image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
