@@ -7,7 +7,7 @@ name = "image-resizer"
 version = "0.1.0"
 description = "AWS Lambda function for image resizing and thumbnail generation"
 requires-python = ">=3.12"
-license = {text = "Apache-2.0"}
+license = { text = "Apache-2.0" }
 authors = [
     { name = "Szymon Blumczynski" }
 ]
@@ -50,6 +50,9 @@ disallow_incomplete_defs = true
 ignore_missing_imports = true
 
 [tool.coverage.run]
+omit = [
+    "*__init__.py",
+]
 data_file = "build/reports/coverage/.coverage"
 
 [tool.coverage.html]

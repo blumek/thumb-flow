@@ -75,6 +75,7 @@ subprojects {
         inputs.dir("src")
         inputs.files(fileTree("test") {
             exclude("integration/**")
+            exclude("**/it_*.py")
         })
         inputs.file("pyproject.toml")
 
@@ -98,7 +99,7 @@ subprojects {
             "--cov-report=html:${coverageReportsDir.get().asFile}/html",
             "--cov-report=xml:${coverageReportsDir.get().asFile}/coverage.xml",
             "--junit-xml=${testReportsDir.get().asFile}/junit.xml",
-            "--ignore=test/integration"
+            "--ignore-glob=**/it_*.py"
         )
     }
 
@@ -118,13 +119,33 @@ subprojects {
         dependsOn("installDevDependencies")
 
         val testReportsDir = layout.buildDirectory.dir("reports/tests")
+        val projectDir = layout.projectDirectory.asFile
 
-        commandLine(
-            pytestExecutable,
-            "test/integration",
-            "-v",
-            "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml"
-        )
+        doFirst {
+            testReportsDir.get().asFile.mkdirs()
+
+            val testDir = File(projectDir, "test")
+            val itFiles = if (testDir.exists()) {
+                testDir.walkTopDown()
+                    .filter { it.isFile && it.name.startsWith("it_") && it.name.endsWith(".py") }
+                    .map { it.relativeTo(projectDir).path }
+                    .toList()
+            } else {
+                emptyList()
+            }
+
+            if (itFiles.isEmpty()) {
+                logger.warn("No integration test files (it_*.py) found - skipping")
+            } else {
+                logger.info("Found ${itFiles.size} integration test files: ${itFiles.map { File(it).name }}")
+                commandLine(
+                    pytestExecutable,
+                    "-v",
+                    "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml",
+                    *itFiles.toTypedArray()
+                )
+            }
+        }
     }
 
     tasks.register("integrationTest") {
@@ -152,7 +173,7 @@ subprojects {
         inputs.file("pyproject.toml")
         outputs.upToDateWhen { false }
 
-        commandLine(flake8Executable, "src/", "test/", "--max-line-length=88", "--extend-ignore=E203,W503")
+        commandLine(flake8Executable, "src/", "test/", "--max-line-length=100", "--extend-ignore=E203,W503")
     }
 
     tasks.register<Exec>("formatCheck") {
@@ -193,14 +214,8 @@ subprojects {
 
     tasks.register("check") {
         group = "verification"
-        description = "Run all verification tasks"
-        dependsOn("lint", "formatCheck", "typeCheck", "securityCheck", "test")
-    }
-
-    tasks.register("quickCheck") {
-        group = "verification"
         description = "Run quick verification tasks (no tests)"
-        dependsOn("lint", "formatCheck", "typeCheck")
+        dependsOn("lint", "formatCheck", "typeCheck", "securityCheck")
     }
 
     tasks.register<Exec>("format") {

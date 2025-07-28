@@ -1,6 +1,6 @@
 import logging
 
-import boto3
+from mypy_boto3_s3.client import S3Client
 
 from dev_blumek_upload_handler.infrastructure.repository.image_repository import (
     ImageRepository,
@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class S3ImageRepository(ImageRepository):
-    def __init__(self, s3_client: boto3.client, bucket_name: str):
-        self.s3_client: boto3.client = s3_client
+    def __init__(self, s3_client: S3Client, bucket_name: str):
+        self.s3_client: S3Client = s3_client
         self.bucket_name: str = bucket_name
 
     def store(self, request: StoreImageRequest) -> StoreImageReply:
