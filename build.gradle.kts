@@ -1,28 +1,48 @@
 plugins {
-    id("com.github.psxpaul.execfork") version "0.2.2" apply false
+    alias(libs.plugins.execfork) apply false
 }
 
 allprojects {
     group = "com.blumek.thumbflow"
     version = "0.1.0"
+
+    repositories {
+        mavenCentral()
+    }
 }
 
 subprojects {
     apply(plugin = "com.github.psxpaul.execfork")
 
-    repositories {
-        mavenCentral()
-    }
+    val projectName = name
+    val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+    val pythonExecutable = if (isWindows) "python" else "python3"
+    val venvBinDir = if (isWindows) ".venv/Scripts" else ".venv/bin"
+    val pipExecutable = "$venvBinDir/pip"
+    val pytestExecutable = "$venvBinDir/pytest"
+    val blackExecutable = "$venvBinDir/black"
+    val flake8Executable = "$venvBinDir/flake8"
+    val mypyExecutable = "$venvBinDir/mypy"
+    val banditExecutable = "$venvBinDir/bandit"
 
-    val currentProjectDir = projectDir
-    val currentProjectName = project.name
+    tasks.withType<Exec> {
+        outputs.upToDateWhen { false }
+    }
 
     tasks.register<Exec>("createVenv") {
         group = "python"
         description = "Create Python virtual environment"
 
-        commandLine("python3", "-m", "venv", ".venv")
-        workingDir = currentProjectDir
+        inputs.file("pyproject.toml").optional()
+        outputs.dir(".venv")
+
+        doFirst {
+            if (File(".venv").exists()) {
+                throw StopExecutionException("Virtual environment already exists")
+            }
+        }
+
+        commandLine(pythonExecutable, "-m", "venv", ".venv")
     }
 
     tasks.register<Exec>("installDependencies") {
@@ -30,8 +50,10 @@ subprojects {
         description = "Install Python dependencies"
         dependsOn("createVenv")
 
-        commandLine(".venv/bin/pip", "install", "-e", ".")
-        workingDir = currentProjectDir
+        inputs.file("pyproject.toml")
+        outputs.dir("$venvBinDir/../lib")
+
+        commandLine(pipExecutable, "install", "-e", ".")
     }
 
     tasks.register<Exec>("installDevDependencies") {
@@ -39,34 +61,45 @@ subprojects {
         description = "Install Python development dependencies"
         dependsOn("createVenv")
 
-        commandLine(".venv/bin/pip", "install", "-e", ".[dev]")
-        workingDir = currentProjectDir
+        inputs.file("pyproject.toml")
+        outputs.dir("$venvBinDir/../lib")
+
+        commandLine(pipExecutable, "install", "-e", ".[dev]")
     }
 
     tasks.register<Exec>("test") {
         group = "verification"
-        description = "Run unit tests for $currentProjectName"
+        description = "Run unit tests for $projectName"
         dependsOn("installDevDependencies")
+
+        inputs.dir("src")
+        inputs.files(fileTree("test") {
+            exclude("integration/**")
+        })
+        inputs.file("pyproject.toml")
 
         val testReportsDir = layout.buildDirectory.dir("reports/tests")
         val coverageReportsDir = layout.buildDirectory.dir("reports/coverage")
 
+        outputs.dir(testReportsDir)
+        outputs.dir(coverageReportsDir)
+
         doFirst {
+            testReportsDir.get().asFile.mkdirs()
             coverageReportsDir.get().asFile.mkdirs()
         }
 
         commandLine(
-            ".venv/bin/pytest",
+            pytestExecutable,
             "test/",
             "-v",
             "--cov=src",
             "--cov-report=term-missing",
-            "--cov-report=html",
-            "--cov-report=xml",
+            "--cov-report=html:${coverageReportsDir.get().asFile}/html",
+            "--cov-report=xml:${coverageReportsDir.get().asFile}/coverage.xml",
             "--junit-xml=${testReportsDir.get().asFile}/junit.xml",
             "--ignore=test/integration"
         )
-        workingDir = currentProjectDir
     }
 
     tasks.register("beforeIntegrationTest") {
@@ -87,17 +120,16 @@ subprojects {
         val testReportsDir = layout.buildDirectory.dir("reports/tests")
 
         commandLine(
-            ".venv/bin/pytest",
+            pytestExecutable,
             "test/integration",
             "-v",
             "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml"
         )
-        workingDir = currentProjectDir
     }
 
     tasks.register("integrationTest") {
         group = "verification"
-        description = "Run integration tests for $currentProjectName with template pattern"
+        description = "Run integration tests for $projectName"
         dependsOn("beforeIntegrationTest", "runIntegrationTests")
         finalizedBy("afterIntegrationTest")
     }
@@ -115,8 +147,12 @@ subprojects {
         description = "Run linting checks"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/flake8", "src/", "test/", "--max-line-length=88", "--extend-ignore=E203,W503")
-        workingDir = currentProjectDir
+        inputs.dir("src")
+        inputs.dir("test")
+        inputs.file("pyproject.toml")
+        outputs.upToDateWhen { false }
+
+        commandLine(flake8Executable, "src/", "test/", "--max-line-length=88", "--extend-ignore=E203,W503")
     }
 
     tasks.register<Exec>("formatCheck") {
@@ -124,8 +160,12 @@ subprojects {
         description = "Check code formatting with Black"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/black", "--check", "src/", "test/")
-        workingDir = currentProjectDir
+        inputs.dir("src")
+        inputs.dir("test")
+        inputs.file("pyproject.toml")
+        outputs.upToDateWhen { false }
+
+        commandLine(blackExecutable, "--check", "src/", "test/")
     }
 
     tasks.register<Exec>("typeCheck") {
@@ -133,8 +173,11 @@ subprojects {
         description = "Run type checking with mypy"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/mypy", "src/", "--ignore-missing-imports")
-        workingDir = currentProjectDir
+        inputs.dir("src")
+        inputs.file("pyproject.toml")
+        outputs.upToDateWhen { false }
+
+        commandLine(mypyExecutable, "src/", "--ignore-missing-imports")
     }
 
     tasks.register<Exec>("securityCheck") {
@@ -142,8 +185,22 @@ subprojects {
         description = "Run security checks with bandit"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/bandit", "-r", "src/", "-ll")
-        workingDir = currentProjectDir
+        inputs.dir("src")
+        outputs.upToDateWhen { false }
+
+        commandLine(banditExecutable, "-r", "src/", "-ll")
+    }
+
+    tasks.register("check") {
+        group = "verification"
+        description = "Run all verification tasks"
+        dependsOn("lint", "formatCheck", "typeCheck", "securityCheck", "test")
+    }
+
+    tasks.register("quickCheck") {
+        group = "verification"
+        description = "Run quick verification tasks (no tests)"
+        dependsOn("lint", "formatCheck", "typeCheck")
     }
 
     tasks.register<Exec>("format") {
@@ -151,37 +208,37 @@ subprojects {
         description = "Format code with Black"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/black", "src/", "test/")
-        workingDir = currentProjectDir
+        inputs.dir("src")
+        inputs.dir("test")
+        outputs.upToDateWhen { false }
+
+        commandLine(blackExecutable, "src/", "test/")
     }
 
-    tasks.register("clean") {
+    tasks.register<Delete>("clean") {
         group = "build"
         description = "Clean all build artifacts, caches, and generated files"
 
+        delete(".venv", "build")
+        delete(fileTree(".") {
+            include("**/__pycache__/**")
+            include("**/*.pyc")
+            include("**/*.pyo")
+            include("**/*.pyd")
+            include("**/*.egg-info/**")
+            include("**/.eggs/**")
+            include("**/.coverage")
+            include("**/.coverage.*")
+            include("**/htmlcov/**")
+            include("**/.pytest_cache/**")
+            include("**/.mypy_cache/**")
+            include("**/*.tmp")
+            include("**/*.temp")
+            include("**/*~")
+        })
+
         doLast {
-            logger.info("Cleaning project: $currentProjectName")
-
-            delete(".venv")
-            delete("build")
-            delete(fileTree(currentProjectDir) {
-                include("**/__pycache__/**")
-                include("**/*.pyc")
-                include("**/*.pyo")
-                include("**/*.pyd")
-                include("**/*.egg-info/**")
-                include("**/.eggs/**")
-                include("**/.coverage")
-                include("**/.coverage.*")
-                include("**/htmlcov/**")
-                include("**/.pytest_cache/**")
-                include("**/.mypy_cache/**")
-                include("**/*.tmp")
-                include("**/*.temp")
-                include("**/*~")
-            })
-
-            logger.info("Cleaned project: $currentProjectName")
+            println("Cleaned project: $projectName")
         }
     }
 
@@ -189,7 +246,6 @@ subprojects {
         group = "docker"
         description = "Build Docker image"
 
-        commandLine("docker", "build", "-t", "$currentProjectName:latest", ".")
-        workingDir = currentProjectDir
+        commandLine("docker", "build", "-t", "blumek/$projectName:latest", ".")
     }
 }
