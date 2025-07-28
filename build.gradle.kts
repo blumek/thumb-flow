@@ -122,23 +122,20 @@ subprojects {
         val projectDir = layout.projectDirectory.asFile
 
         doFirst {
-            testReportsDir.get().asFile.mkdirs()
+            testReportsDir.get().asFile.apply { mkdirs() }
 
             val testDir = File(projectDir, "test")
-            val itFiles = if (testDir.exists()) {
-                testDir.walkTopDown()
+            val itFiles = when {
+                testDir.exists() -> testDir.walkTopDown()
                     .filter { it.isFile && it.name.startsWith("it_") && it.name.endsWith(".py") }
                     .map { it.relativeTo(projectDir).path }
                     .toList()
-            } else {
-                emptyList()
+                else -> emptyList()
             }
 
-            if (itFiles.isEmpty()) {
-                logger.warn("No integration test files (it_*.py) found - skipping")
-            } else {
-                logger.info("Found ${itFiles.size} integration test files: ${itFiles.map { File(it).name }}")
-                commandLine(
+            when {
+                itFiles.isEmpty() -> commandLine("echo", "No integration test files (it_*.py) found - skipping")
+                else -> commandLine(
                     pytestExecutable,
                     "-v",
                     "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml",
