@@ -3,18 +3,18 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "upload-handler"
+name = "image-resizer"
 version = "0.1.0"
-description = "AWS Lambda function for handling image uploads"
-readme = "README.md"
+description = "AWS Lambda function for image resizing and thumbnail generation"
 requires-python = ">=3.12"
-license = { text = "Proprietary" }
+license = { text = "Apache-2.0" }
 authors = [
     { name = "Szymon Blumczynski" }
 ]
 dependencies = [
     "boto3>=1.39.4",
     "aws-lambda-typing>=2.20.0",
+    "pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]
@@ -27,12 +27,10 @@ dev = [
     "bandit",
     "boto3-stubs[essential]",
     "parameterized",
-    "pillow",
     "moto",
 ]
 
 [tool.setuptools]
-package-dir = { "" = "src" }
 packages = { find = { where = ["src"] } }
 
 [tool.black]
@@ -49,12 +47,11 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+ignore_missing_imports = true
 
 [tool.coverage.run]
 omit = [
     "*__init__.py",
-    "src/dev_blumek_upload_handler/application_bootstrap.py",
-    "src/dev_blumek_upload_handler/infrastructure/repository/in_memory_image_repository.py",
 ]
 data_file = "build/reports/coverage/.coverage"
 

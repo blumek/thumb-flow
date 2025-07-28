@@ -28,7 +28,9 @@ class UploadImageService(UploadImageUseCase):
         return StoreImageUseCaseReply(image_key=reply.image_key)
 
     @staticmethod
-    def __to_store_image_gateway_request(request):
+    def __to_store_image_gateway_request(
+        request: StoreImageUseCaseRequest,
+    ) -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
             image_name=request.image_name,
             image_extension=request.image_extension,
