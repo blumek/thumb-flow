@@ -14,12 +14,15 @@ subprojects {
         mavenCentral()
     }
 
+    val currentProjectDir = projectDir
+    val currentProjectName = project.name
+
     tasks.register<Exec>("createVenv") {
         group = "python"
         description = "Create Python virtual environment"
 
         commandLine("python3", "-m", "venv", ".venv")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("installDependencies") {
@@ -28,7 +31,7 @@ subprojects {
         dependsOn("createVenv")
 
         commandLine(".venv/bin/pip", "install", "-e", ".")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("installDevDependencies") {
@@ -37,13 +40,20 @@ subprojects {
         dependsOn("createVenv")
 
         commandLine(".venv/bin/pip", "install", "-e", ".[dev]")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("test") {
         group = "verification"
-        description = "Run unit tests for ${project.name}"
+        description = "Run unit tests for $currentProjectName"
         dependsOn("installDevDependencies")
+
+        val testReportsDir = layout.buildDirectory.dir("reports/tests")
+        val coverageReportsDir = layout.buildDirectory.dir("reports/coverage")
+
+        doFirst {
+            coverageReportsDir.get().asFile.mkdirs()
+        }
 
         commandLine(
             ".venv/bin/pytest",
@@ -51,18 +61,53 @@ subprojects {
             "-v",
             "--cov=src",
             "--cov-report=term-missing",
+            "--cov-report=html",
+            "--cov-report=xml",
+            "--junit-xml=${testReportsDir.get().asFile}/junit.xml",
             "--ignore=test/integration"
         )
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
-    tasks.register<Exec>("integrationTest") {
+    tasks.register("beforeIntegrationTest") {
         group = "verification"
-        description = "Run integration tests for ${project.name}"
+        description = "Hook executed before integration tests"
+    }
+
+    tasks.register("afterIntegrationTest") {
+        group = "verification"
+        description = "Hook executed after integration tests"
+    }
+
+    tasks.register<Exec>("runIntegrationTests") {
+        group = "verification"
+        description = "Execute the actual integration tests"
         dependsOn("installDevDependencies")
 
-        commandLine(".venv/bin/pytest", "test/integration", "-v")
-        workingDir = projectDir
+        val testReportsDir = layout.buildDirectory.dir("reports/tests")
+
+        commandLine(
+            ".venv/bin/pytest",
+            "test/integration",
+            "-v",
+            "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml"
+        )
+        workingDir = currentProjectDir
+    }
+
+    tasks.register("integrationTest") {
+        group = "verification"
+        description = "Run integration tests for $currentProjectName with template pattern"
+        dependsOn("beforeIntegrationTest", "runIntegrationTests")
+        finalizedBy("afterIntegrationTest")
+    }
+
+    tasks.named("runIntegrationTests") {
+        mustRunAfter("beforeIntegrationTest")
+    }
+
+    tasks.named("afterIntegrationTest") {
+        mustRunAfter("runIntegrationTests")
     }
 
     tasks.register<Exec>("lint") {
@@ -71,7 +116,7 @@ subprojects {
         dependsOn("installDevDependencies")
 
         commandLine(".venv/bin/flake8", "src/", "test/", "--max-line-length=88", "--extend-ignore=E203,W503")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("formatCheck") {
@@ -80,7 +125,7 @@ subprojects {
         dependsOn("installDevDependencies")
 
         commandLine(".venv/bin/black", "--check", "src/", "test/")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("typeCheck") {
@@ -89,7 +134,7 @@ subprojects {
         dependsOn("installDevDependencies")
 
         commandLine(".venv/bin/mypy", "src/", "--ignore-missing-imports")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("securityCheck") {
@@ -98,7 +143,7 @@ subprojects {
         dependsOn("installDevDependencies")
 
         commandLine(".venv/bin/bandit", "-r", "src/", "-ll")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register<Exec>("format") {
@@ -107,23 +152,36 @@ subprojects {
         dependsOn("installDevDependencies")
 
         commandLine(".venv/bin/black", "src/", "test/")
-        workingDir = projectDir
+        workingDir = currentProjectDir
     }
 
     tasks.register("clean") {
         group = "build"
-        description = "Clean build artifacts"
+        description = "Clean all build artifacts, caches, and generated files"
 
         doLast {
+            logger.info("Cleaning project: $currentProjectName")
+
             delete(".venv")
             delete("build")
-            delete("dist")
-            delete(fileTree(projectDir) {
+            delete(fileTree(currentProjectDir) {
                 include("**/__pycache__/**")
                 include("**/*.pyc")
                 include("**/*.pyo")
+                include("**/*.pyd")
                 include("**/*.egg-info/**")
+                include("**/.eggs/**")
+                include("**/.coverage")
+                include("**/.coverage.*")
+                include("**/htmlcov/**")
+                include("**/.pytest_cache/**")
+                include("**/.mypy_cache/**")
+                include("**/*.tmp")
+                include("**/*.temp")
+                include("**/*~")
             })
+
+            logger.info("Cleaned project: $currentProjectName")
         }
     }
 
@@ -131,7 +189,7 @@ subprojects {
         group = "docker"
         description = "Build Docker image"
 
-        commandLine("docker", "build", "-t", "${project.name}:latest", ".")
-        workingDir = projectDir
+        commandLine("docker", "build", "-t", "$currentProjectName:latest", ".")
+        workingDir = currentProjectDir
     }
 }

@@ -12,10 +12,6 @@ val testEnvironment = mapOf(
     "AWS_ENDPOINT_URL" to "http://localhost:4566"
 )
 
-tasks.named<Exec>("integrationTest") {
-    environment(testEnvironment)
-}
-
 tasks.register<Exec>("localstackStart") {
     group = "localstack"
     description = "Start LocalStack container for upload-handler"
@@ -24,9 +20,9 @@ tasks.register<Exec>("localstackStart") {
         "docker", "run", "-d", "--rm", "--name", "upload-handler-localstack",
         "-p", "4566:4566",
         "-e", "SERVICES=s3",
-        "-e", "DEFAULT_REGION=us-east-1",
-        "-e", "AWS_ACCESS_KEY_ID=test",
-        "-e", "AWS_SECRET_ACCESS_KEY=test",
+        "-e", "DEFAULT_REGION=${testEnvironment["AWS_REGION"]}",
+        "-e", "AWS_ACCESS_KEY_ID=${testEnvironment["AWS_ACCESS_KEY_ID"]}",
+        "-e", "AWS_SECRET_ACCESS_KEY=${testEnvironment["AWS_SECRET_ACCESS_KEY"]}",
         "localstack/localstack:latest"
     )
 
@@ -45,8 +41,8 @@ tasks.register<Exec>("localstackStart") {
                     Thread.sleep(2000)
                     break
                 }
-            } catch (e: Exception) {
-                // Ignore and retry
+            } catch (_: Exception) {
+                // ignore and retry
             }
             attempts++
             Thread.sleep(1000)
@@ -59,12 +55,24 @@ tasks.register<Exec>("localstackStart") {
     }
 }
 
-tasks.register<Exec>("localstackStop") {
+tasks.register("localstackStop") {
     group = "localstack"
     description = "Stop LocalStack container for upload-handler"
 
-    commandLine("docker", "stop", "upload-handler-localstack")
-    isIgnoreExitValue = true
+    doLast {
+        println("Cleaning up LocalStack for upload-handler...")
+
+        try {
+            val stopContainer = ProcessBuilder("docker", "stop", "upload-handler-localstack")
+                .start()
+            stopContainer.waitFor()
+            println("LocalStack container stopped successfully")
+        } catch (_: Exception) {
+            println("Warning: Failed to stop LocalStack container - it may have already been stopped")
+        }
+
+        println("LocalStack cleanup completed for upload-handler")
+    }
 }
 
 tasks.register<Exec>("createTestBucket") {
@@ -73,30 +81,26 @@ tasks.register<Exec>("createTestBucket") {
     dependsOn("localstackStart")
 
     commandLine("aws", "--endpoint-url=http://localhost:4566", "s3", "mb", "s3://upload-handler-test-bucket")
-    environment("AWS_ACCESS_KEY_ID", "test")
-    environment("AWS_SECRET_ACCESS_KEY", "test")
-    environment("AWS_REGION", "us-east-1")
+    environment(testEnvironment)
     isIgnoreExitValue = true
 }
 
-tasks.register<Exec>("integrationTestWithLocalStack") {
-    group = "verification"
-    description = "Run integration tests with LocalStack for upload-handler"
-    dependsOn("createTestBucket", "installDevDependencies")
-    finalizedBy("localstackStop")
+tasks.named<Exec>("runIntegrationTests") {
+    environment(testEnvironment)
+}
 
-    commandLine(
-        ".venv/bin/pytest",
-        "test/integration",
-        "-v",
-        "--tb=short"
-    )
-    workingDir = projectDir
+tasks.named("beforeIntegrationTest") {
+    dependsOn("localstackStart", "createTestBucket")
 
-    environment("AWS_ACCESS_KEY_ID", "test")
-    environment("AWS_SECRET_ACCESS_KEY", "test")
-    environment("AWS_REGION", "us-east-1")
-    environment("AWS_ENDPOINT_URL", "http://localhost:4566")
-    environment("LOCALSTACK_ENDPOINT", "http://localhost:4566")
-    environment("AWS_S3_BUCKET_NAME", "upload-handler-test-bucket")
+    doLast {
+        println("LocalStack setup completed for upload-handler integration tests")
+    }
+}
+
+tasks.named("afterIntegrationTest") {
+    dependsOn("localstackStop")
+
+    doLast {
+        println("Integration test cleanup completed for upload-handler")
+    }
 }
