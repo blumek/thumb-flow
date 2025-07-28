@@ -53,7 +53,9 @@ class S3ImagePersistenceGateway(ImagePersistenceGateway):
         return StoreImageGatewayReply(image_key=store_response.image_key)
 
     @staticmethod
-    def __to_store_image_request(request, s3_key):
+    def __to_store_image_request(
+        request: StoreImageGatewayRequest, s3_key: str
+    ) -> StoreImageRequest:
         return StoreImageRequest(
             image_key=s3_key,
             image_extension=request.image_extension,

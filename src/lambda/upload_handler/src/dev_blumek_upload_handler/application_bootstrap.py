@@ -1,6 +1,12 @@
 import os
+from typing import TYPE_CHECKING, Optional
 
 import boto3
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.client import S3Client
+else:
+    S3Client = object
 
 from dev_blumek_upload_handler.application.use_case.image_upload_service import (
     UploadImageService,
@@ -34,9 +40,6 @@ from dev_blumek_upload_handler.infrastructure.policy.size_image_policy import (
 from dev_blumek_upload_handler.infrastructure.repository.image_repository import (
     ImageRepository,
 )
-from dev_blumek_upload_handler.infrastructure.repository.in_memory_image_repository import (
-    InMemoryImageRepository,
-)
 from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository import (
     S3ImageRepository,
 )
@@ -66,15 +69,11 @@ def image_persistence_gateway(
     )
 
 
-def in_memory_image_repository() -> ImageRepository:
-    return InMemoryImageRepository()
-
-
-def s3_image_repository(s3_client: boto3.client, bucket_name: str) -> ImageRepository:
+def s3_image_repository(s3_client: S3Client, bucket_name: str) -> ImageRepository:
     return S3ImageRepository(s3_client, bucket_name)
 
 
-def s3_client() -> boto3.client:
+def s3_client() -> S3Client:
     return boto3.client("s3")
 
 
@@ -94,7 +93,7 @@ def key_factory() -> ImageKeyFactory:
     return UniqueImageKeyFactory()
 
 
-def load_variable(variable_name: str, default_value: str = None) -> str:
+def load_variable(variable_name: str, default_value: Optional[str] = None) -> str:
     value = os.getenv(variable_name, default_value)
     if value is None:
         raise ValueError(f"Environment variable '{variable_name}' is not set.")

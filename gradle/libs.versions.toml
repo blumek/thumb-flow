@@ -1,0 +1,5 @@
+[versions]
+execfork = "0.2.2"
+
+[plugins]
+execfork = { id = "com.github.psxpaul.execfork", version.ref = "execfork" }

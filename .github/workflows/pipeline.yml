@@ -39,7 +39,14 @@ jobs:
     uses: ./.github/workflows/aws-lambda-function-test-workflow.yml
     with:
       component-path: src/lambda/upload_handler
-      component-name: upload-handler
+      component-name: upload_handler
+
+  test-image-resizer:
+    name: Test Image Resizer
+    uses: ./.github/workflows/aws-lambda-function-test-workflow.yml
+    with:
+      component-path: src/lambda/image_resizer
+      component-name: image_resizer
 
   build-upload-handler:
     name: Build Upload Handler
@@ -52,10 +59,21 @@ jobs:
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
+  build-image-resizer:
+    name: Build Image Resizer
+    needs: test-image-resizer
+    uses: ./.github/workflows/aws-lambda-function-build-workflow.yml
+    with:
+      component-path: src/lambda/image_resizer
+      component-name: image-resizer
+      repository-name: blumek/image-resizer
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
   terraform-plan:
     name: Terraform Plan (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'pull_request'
-    needs: [ determine-environment, build-upload-handler ]
+    needs: [ determine-environment, build-upload-handler, build-image-resizer ]
     uses: ./.github/workflows/terraform-plan-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
@@ -66,7 +84,7 @@ jobs:
   terraform-apply:
     name: Terraform Apply (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'push'
-    needs: [ determine-environment, build-upload-handler ]
+    needs: [ determine-environment, build-upload-handler, build-image-resizer ]
     uses: ./.github/workflows/terraform-apply-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
