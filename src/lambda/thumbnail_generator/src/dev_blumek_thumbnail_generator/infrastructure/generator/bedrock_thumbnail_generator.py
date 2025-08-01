@@ -40,17 +40,17 @@ class BedrockConfiguration:
 
 class BedrockThumbnailGenerator(ThumbnailGenerator):
     def __init__(
-            self,
-            bedrock_client: BedrockRuntimeClient,
-            configuration: BedrockConfiguration,
-            seed_generator: SeedGenerator,
+        self,
+        bedrock_client: BedrockRuntimeClient,
+        configuration: BedrockConfiguration,
+        seed_generator: SeedGenerator,
     ) -> None:
         self._bedrock_client = bedrock_client
         self._config = configuration
         self._seed_generator = seed_generator
 
     def generate_thumbnail(
-            self, request: GenerateThumbnailRequest
+        self, request: GenerateThumbnailRequest
     ) -> GenerateThumbnailReply:
         try:
             model_request: Dict[str, Any] = self.__build_model_request(request)
@@ -70,7 +70,7 @@ class BedrockThumbnailGenerator(ThumbnailGenerator):
             ) from exception
 
     def __build_model_request(
-            self, request: GenerateThumbnailRequest
+        self, request: GenerateThumbnailRequest
     ) -> Dict[str, Any]:
         seed: int = (
             request.seed
@@ -90,7 +90,7 @@ class BedrockThumbnailGenerator(ThumbnailGenerator):
         }
 
     def __invoke_bedrock_model(
-            self, model_request: Dict[str, Any]
+        self, model_request: Dict[str, Any]
     ) -> InvokeModelResponseTypeDef:
         try:
             return self._bedrock_client.invoke_model(
