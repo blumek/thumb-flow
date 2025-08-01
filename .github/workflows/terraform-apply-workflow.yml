@@ -7,8 +7,12 @@ on:
         description: 'Environment to apply to'
         required: true
         type: string
-      image-uri:
-        description: 'Lambda function image URI'
+      upload-handler-image-uri:
+        description: 'Upload handler Lambda function image URI'
+        required: true
+        type: string
+      thumbnail-generator-image-uri:
+        description: 'Thumbnail generator Lambda function image URI'
         required: true
         type: string
     secrets:
@@ -16,7 +20,7 @@ on:
         required: true
 
 env:
-  AWS_REGION: eu-central-1
+  AWS_REGION: us-east-1
   TF_VERSION: '1.12.2'
 
 permissions:
@@ -55,7 +59,8 @@ jobs:
         working-directory: terraform/environments/${{ inputs.environment }}
         run: |
           terraform plan -detailed-exitcode -no-color \
-            -var="upload_handler_image_uri=${{ inputs.image-uri }}" \
+            -var="upload_handler_image_uri=${{ inputs.upload-handler-image-uri }}" \
+            -var="thumbnail_generator_image_uri=${{ inputs.thumbnail-generator-image-uri }}" \
             -out=tfplan
 
       - name: Terraform Apply

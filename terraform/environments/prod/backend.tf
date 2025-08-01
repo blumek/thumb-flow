@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "thumbflow-terraform-state"
+    bucket = "infra-thumbflow-terraform-state"
     key    = "environments/prod/terraform.tfstate"
-    region = "eu-central-1"
+    region = "us-east-1"
   }
 }

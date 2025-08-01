@@ -1,5 +1,5 @@
 """
-Placeholder test for image-resizer module.
+Placeholder test for thumbnail-generator module.
 This ensures the test infrastructure works while the module is being developed.
 """
 

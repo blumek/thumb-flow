@@ -41,12 +41,12 @@ jobs:
       component-path: src/lambda/upload_handler
       component-name: upload_handler
 
-  test-image-resizer:
-    name: Test Image Resizer
+  test-thumbnail-generator:
+    name: Test Thumbnail Generator
     uses: ./.github/workflows/aws-lambda-function-test-workflow.yml
     with:
-      component-path: src/lambda/image_resizer
-      component-name: image_resizer
+      component-path: src/lambda/thumbnail_generator
+      component-name: thumbnail_generator
 
   build-upload-handler:
     name: Build Upload Handler
@@ -59,35 +59,37 @@ jobs:
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
-  build-image-resizer:
-    name: Build Image Resizer
-    needs: test-image-resizer
+  build-thumbnail-generator:
+    name: Build Thumbnail Generator
+    needs: test-thumbnail-generator
     uses: ./.github/workflows/aws-lambda-function-build-workflow.yml
     with:
-      component-path: src/lambda/image_resizer
-      component-name: image-resizer
-      repository-name: blumek/image-resizer
+      component-path: src/lambda/thumbnail_generator
+      component-name: thumbnail-generator
+      repository-name: blumek/thumbnail-generator
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   terraform-plan:
     name: Terraform Plan (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'pull_request'
-    needs: [ determine-environment, build-upload-handler, build-image-resizer ]
+    needs: [ determine-environment, build-upload-handler, build-thumbnail-generator ]
     uses: ./.github/workflows/terraform-plan-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
-      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      upload-handler-image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      thumbnail-generator-image-uri: ${{ needs.build-thumbnail-generator.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   terraform-apply:
     name: Terraform Apply (${{ needs.determine-environment.outputs.environment }})
     if: github.event_name == 'push'
-    needs: [ determine-environment, build-upload-handler, build-image-resizer ]
+    needs: [ determine-environment, build-upload-handler, build-thumbnail-generator ]
     uses: ./.github/workflows/terraform-apply-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
-      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      upload-handler-image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      thumbnail-generator-image-uri: ${{ needs.build-thumbnail-generator.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
