@@ -75,3 +75,28 @@ resource "aws_iam_role_policy_attachment" "thumbnail_bucket_access" {
   role       = module.thumbnail_generator_function.execution_role_name
   policy_arn = aws_iam_policy.thumbnail_bucket_access.arn
 }
+
+resource "aws_iam_policy" "bedrock_access" {
+  name        = "${var.thumbnail_generator_function_name}-bedrock-access-policy"
+  description = "Allows Lambda function to invoke Amazon Bedrock models"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:ListFoundationModels",
+          "bedrock:GetFoundationModel"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bedrock_access" {
+  role       = module.thumbnail_generator_function.execution_role_name
+  policy_arn = aws_iam_policy.bedrock_access.arn
+}
