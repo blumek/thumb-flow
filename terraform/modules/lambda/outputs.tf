@@ -12,3 +12,8 @@ output "role_arn" {
   description = "ARN of the IAM role used by the Lambda function"
   value       = aws_iam_role.lambda_execution_role.arn
 }
+
+output "execution_role_name" {
+  description = "Name of the IAM role used by the Lambda function"
+  value       = aws_iam_role.lambda_execution_role.name
+}

@@ -42,11 +42,11 @@ jobs:
       component-name: upload_handler
 
   test-thumbnail-generator:
-    name: Test Image Resizer
+    name: Test Thumbnail Generator
     uses: ./.github/workflows/aws-lambda-function-test-workflow.yml
     with:
-      component-path: src/lambda/image_resizer
-      component-name: image_resizer
+      component-path: src/lambda/thumbnail_generator
+      component-name: thumbnail_generator
 
   build-upload-handler:
     name: Build Upload Handler
@@ -60,11 +60,11 @@ jobs:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   build-thumbnail-generator:
-    name: Build Image Resizer
+    name: Build Thumbnail Generator
     needs: test-thumbnail-generator
     uses: ./.github/workflows/aws-lambda-function-build-workflow.yml
     with:
-      component-path: src/lambda/image_resizer
+      component-path: src/lambda/thumbnail_generator
       component-name: thumbnail-generator
       repository-name: blumek/thumbnail-generator
     secrets:
@@ -77,7 +77,8 @@ jobs:
     uses: ./.github/workflows/terraform-plan-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
-      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      upload-handler-image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      thumbnail-generator-image-uri: ${{ needs.build-thumbnail-generator.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
@@ -88,6 +89,7 @@ jobs:
     uses: ./.github/workflows/terraform-apply-workflow.yml
     with:
       environment: ${{ needs.determine-environment.outputs.environment }}
-      image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      upload-handler-image-uri: ${{ needs.build-upload-handler.outputs.image-uri }}
+      thumbnail-generator-image-uri: ${{ needs.build-thumbnail-generator.outputs.image-uri }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
