@@ -19,13 +19,3 @@ resource "aws_s3_bucket_public_access_block" "this" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-resource "aws_s3_bucket_notification" "this" {
-  count  = var.enable_notification ? 1 : 0
-  bucket = aws_s3_bucket.this.id
-
-  lambda_function {
-    lambda_function_arn = var.notification_lambda_arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-}

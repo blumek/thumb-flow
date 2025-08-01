@@ -3,9 +3,6 @@ module "raw_images_bucket" {
 
   bucket_name = var.raw_bucket_name
   tags        = merge(var.tags, { Environment = var.environment })
-
-  enable_notification = true
-  notification_lambda_arn = module.thumbnail_generator_function.function_arn
 }
 
 module "thumbnail_bucket" {
@@ -13,8 +10,6 @@ module "thumbnail_bucket" {
 
   bucket_name = var.thumbnail_bucket_name
   tags        = merge(var.tags, { Environment = var.environment })
-
-  enable_notification = false
 }
 
 module "upload_function" {
@@ -40,19 +35,17 @@ module "thumbnail_generator_function" {
 
   function_name = var.thumbnail_generator_function_name
   image_uri     = var.thumbnail_generator_image_uri
-  timeout       = 120  # Zwiększony timeout dla przetwarzania obrazów
-  memory_size   = 512  # Zwiększona pamięć dla operacji na obrazach
+  timeout       = 120 # Zwiększony timeout dla przetwarzania obrazów
+  memory_size   = 512 # Zwiększona pamięć dla operacji na obrazach
 
   environment_variables = {
-    RAW_S3_BUCKET_NAME      = module.raw_images_bucket.bucket_name
+    RAW_S3_BUCKET_NAME       = module.raw_images_bucket.bucket_name
     THUMBNAIL_S3_BUCKET_NAME = module.thumbnail_bucket.bucket_name
   }
 
   # Uprawnienia do odczytu z bucketa z surowymi obrazami
   enable_s3_output_policy = true
   s3_output_bucket_arn    = module.raw_images_bucket.bucket_arn
-
-  s3_events_permissions = module.raw_images_bucket.bucket_arn
 
   tags = merge(var.tags, { Environment = var.environment })
 }

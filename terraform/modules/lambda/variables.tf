@@ -32,11 +32,6 @@ variable "tags" {
   default     = {}
 }
 
-variable "s3_events_permissions" {
-  description = "ARNs of S3 buckets to grant permissions for Lambda function to access"
-  type        = string
-  default     = null
-}
 
 variable "enable_s3_output_policy" {
   description = "Enable S3 output policy for the Lambda function"
