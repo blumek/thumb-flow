@@ -39,8 +39,8 @@ module "thumbnail_generator_function" {
   memory_size   = 512 # Zwiększona pamięć dla operacji na obrazach
 
   environment_variables = {
-    RAW_S3_BUCKET_NAME       = module.raw_images_bucket.bucket_name
-    THUMBNAIL_S3_BUCKET_NAME = module.thumbnail_bucket.bucket_name
+    AWS_S3_RAW_BUCKET_NAME       = module.raw_images_bucket.bucket_name
+    AWS_S3_THUMBNAIL_BUCKET_NAME = module.thumbnail_bucket.bucket_name
   }
 
   # Uprawnienia do odczytu z bucketa z surowymi obrazami
