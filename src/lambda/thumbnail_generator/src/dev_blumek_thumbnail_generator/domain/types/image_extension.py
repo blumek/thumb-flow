@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 
 class ImageExtension(Enum):
@@ -15,7 +16,7 @@ class ImageExtension(Enum):
         self.mime_type = mime_type
 
     @classmethod
-    def from_extension(cls, extension: str) -> "ImageExtension":
+    def from_extension(cls, extension: str) -> Optional["ImageExtension"]:
         if not extension:
             raise ValueError("No extension provided")
 
@@ -26,3 +27,16 @@ class ImageExtension(Enum):
                 return ext_type
 
         raise Exception(f"Unknown extension: {extension}")
+
+    @classmethod
+    def from_mime_type(cls, mime_type: str) -> Optional["ImageExtension"]:
+        if not mime_type:
+            raise ValueError("No MIME type provided")
+
+        normalized_mime_type = mime_type.lower()
+
+        for ext_type in cls:
+            if ext_type.mime_type == normalized_mime_type:
+                return ext_type
+
+        raise Exception(f"Unknown MIME type: {mime_type}")

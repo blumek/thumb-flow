@@ -34,17 +34,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 
 
 def __to_store_image_request(event: Dict[str, Any]) -> StoreImageUseCaseRequest:
-    required_fields = ["image_name", "image_extension", "image_bytes"]
+    required_fields: list[str] = ["image_name", "image_extension", "image_bytes"]
     for field in required_fields:
         if field not in event:
             raise KeyError(field)
 
-    image_extension = ImageExtension.from_extension(event["image_extension"])
-    if image_extension is None:
-        raise ValueError(f"Invalid image extension: {event['image_extension']}")
-
     return StoreImageUseCaseRequest(
         image_name=event["image_name"],
-        image_extension=image_extension,
+        image_extension=ImageExtension.from_extension(event["image_extension"]),
         image_bytes=base64.b64decode(event["image_bytes"]),
     )

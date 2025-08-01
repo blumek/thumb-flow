@@ -1,12 +1,9 @@
 import os
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import boto3
 
-if TYPE_CHECKING:
-    from mypy_boto3_s3.client import S3Client
-else:
-    S3Client = object
+from mypy_boto3_s3.client import S3Client
 
 from dev_blumek_upload_handler.application.use_case.image_upload_service import (
     UploadImageService,
