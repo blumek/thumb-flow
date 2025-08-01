@@ -117,22 +117,20 @@ class BedrockThumbnailGenerator(ThumbnailGenerator):
             body_str = self.__read(body).decode("utf-8")
             response_data = json.loads(body_str)
 
-            # Format odpowiedzi dla Stability AI SDXL
             if "artifacts" in response_data and len(response_data["artifacts"]) > 0:
                 base64_image = response_data["artifacts"][0].get("base64")
                 if base64_image:
                     return base64.b64decode(base64_image)
 
-            # Obsługa błędu - nieprawidłowy format odpowiedzi
             logger.error(f"Unexpected response format: {response_data}")
             raise BedrockThumbnailGenerationError(
                 "Invalid response format from Bedrock model"
             )
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse Bedrock response: {e}")
+        except json.JSONDecodeError as exception:
+            logger.error(f"Failed to parse Bedrock response: {exception}")
             raise BedrockThumbnailGenerationError(
-                f"Failed to parse Bedrock response: {e}"
-            ) from e
+                f"Failed to parse Bedrock response: {exception}"
+            ) from exception
 
     @staticmethod
     def __read(body: StreamingBody) -> bytes:

@@ -64,7 +64,7 @@ def generate_thumbnail_use_case() -> GenerateThumbnailUseCase:
             key_factory=key_factory(),
         ),
         thumbnail_generator=thumbnail_generator(
-            bedrock_client=bedrock_client(aws_region=aws_region()),
+            bedrock_client=bedrock_client(),
             configuration=bedrock_configuration(),
             seed_generator=seed_generator(),
         ),
@@ -116,12 +116,8 @@ def thumbnail_generator(
     )
 
 
-def bedrock_client(aws_region: str) -> BedrockRuntimeClient:
-    return boto3.client("bedrock-runtime", region_name=aws_region)
-
-
-def aws_region() -> str:
-    return load_variable("AWS_REGION", "eu-central-1")
+def bedrock_client() -> BedrockRuntimeClient:
+    return boto3.client("bedrock-runtime")
 
 
 def bedrock_configuration() -> BedrockConfiguration:

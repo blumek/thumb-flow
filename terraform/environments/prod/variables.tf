@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources in"
   type        = string
-  default     = "eu-central-1"
+  default     = "us-east-1"
 }
 
 variable "upload_handler_image_uri" {
