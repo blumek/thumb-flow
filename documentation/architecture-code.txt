@@ -1,0 +1,36 @@
+User [icon: user]
+Amplify [icon: aws-amplify]
+API Gateway [icon: aws-api-gateway]
+Upload Function [icon: aws-lambda]
+Raw Images Bucket [icon: aws-simple-storage-service]
+Processing Queue [icon: aws-sqs]
+Thumbnail Generator Function [icon: aws-lambda]
+AWS Bedrock [icon: aws-Bedrock]
+Thumbnails Bucket [icon: aws-simple-storage-service]
+Metadata Store [icon: aws-dynamodb]
+Query Function [icon: aws-lambda]
+
+// User Interaction
+User > Amplify
+
+// API Entry
+Amplify > API Gateway
+
+// Upload Flow
+API Gateway > Upload Function
+Upload Function > Raw Images Bucket
+Upload Function > Processing Queue
+Upload Function > Metadata Store
+
+// Processing Flow
+Processing Queue > Thumbnail Generator Function
+Thumbnail Generator Function > AWS Bedrock
+Thumbnail Generator Function > Raw Images Bucket
+Thumbnail Generator Function > Thumbnails Bucket
+Thumbnail Generator Function > Metadata Store
+
+// Query Flow
+Amplify > API Gateway
+API Gateway > Query Function
+Query Function > Metadata Store
+Query Function > Thumbnails Bucket

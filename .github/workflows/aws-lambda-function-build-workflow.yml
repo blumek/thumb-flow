@@ -29,7 +29,7 @@ on:
         required: true
 
 env:
-  AWS_REGION: eu-central-1
+  AWS_REGION: us-east-1
   IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}
 
 jobs:

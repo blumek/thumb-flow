@@ -8,7 +8,7 @@ import pytest
 from PIL import Image
 from aws_lambda_typing.context import Context
 
-from dev_blumek_upload_handler.handler import lambda_handler
+from dev_blumek_upload_handler.bootstrap.handler import lambda_handler
 
 
 class TestImageUploadIntegration:

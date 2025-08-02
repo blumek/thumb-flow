@@ -88,12 +88,15 @@ class TestImageExtension(TestCase):
             ("mp4",),
         ]
     )
-    def test_from_extension_should_return_none_for_invalid_extension(
+    def test_from_extension_should_raise_exception_for_invalid_extension(
         self, given_extension
     ):
-        actual_result = ImageExtension.from_extension(given_extension)
+        with self.assertRaises(Exception) as context:
+            ImageExtension.from_extension(given_extension)
 
-        self.assertIsNone(actual_result)
+        self.assertTrue(
+            f"Unknown extension: {given_extension}" in str(context.exception)
+        )
 
     @parameterized.expand(
         [
@@ -101,12 +104,13 @@ class TestImageExtension(TestCase):
             (None,),
         ]
     )
-    def test_from_extension_should_return_none_for_empty_or_none_extension(
+    def test_from_extension_should_raise_exception_for_empty_or_none_extension(
         self, given_extension
     ):
-        actual_result = ImageExtension.from_extension(given_extension)  # type: ignore
+        with self.assertRaises(ValueError) as context:
+            ImageExtension.from_extension(given_extension)
 
-        self.assertIsNone(actual_result)
+        self.assertTrue("No extension provided" in str(context.exception))
 
 
 if __name__ == "__main__":

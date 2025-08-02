@@ -117,25 +117,26 @@ subprojects {
         group = "verification"
         description = "Execute the actual integration tests"
         dependsOn("installDevDependencies")
+        finalizedBy("afterIntegrationTest")
 
         val testReportsDir = layout.buildDirectory.dir("reports/tests")
         val projectDir = layout.projectDirectory.asFile
 
         doFirst {
-            testReportsDir.get().asFile.apply { mkdirs() }
+            testReportsDir.get().asFile.mkdirs()
 
             val testDir = File(projectDir, "test")
-            val itFiles = when {
-                testDir.exists() -> testDir.walkTopDown()
-                    .filter { it.isFile && it.name.startsWith("it_") && it.name.endsWith(".py") }
-                    .map { it.relativeTo(projectDir).path }
-                    .toList()
-                else -> emptyList()
-            }
+            val itFiles = testDir.takeIf { it.exists() }
+                ?.walkTopDown()
+                ?.filter { it.isFile && it.name.matches(Regex("it_.*\\.py")) }
+                ?.map { it.relativeTo(projectDir).path }
+                ?.toList()
+                ?: emptyList()
 
-            when {
-                itFiles.isEmpty() -> commandLine("echo", "No integration test files (it_*.py) found - skipping")
-                else -> commandLine(
+            if (itFiles.isEmpty()) {
+                commandLine("echo", "No integration test files (it_*.py) found - skipping")
+            } else {
+                commandLine(
                     pytestExecutable,
                     "-v",
                     "--junit-xml=${testReportsDir.get().asFile}/integration-junit.xml",
@@ -149,7 +150,6 @@ subprojects {
         group = "verification"
         description = "Run integration tests for $projectName"
         dependsOn("beforeIntegrationTest", "runIntegrationTests")
-        finalizedBy("afterIntegrationTest")
     }
 
     tasks.named("runIntegrationTests") {
