@@ -40,14 +40,6 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_lambda_permission" "s3_event" {
-  count         = var.s3_events_permissions != null ? 1 : 0
-  statement_id  = "AllowS3Invocation"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.this.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = var.s3_events_permissions
-}
 
 resource "aws_iam_policy" "s3_output" {
   count       = var.enable_s3_output_policy ? 1 : 0

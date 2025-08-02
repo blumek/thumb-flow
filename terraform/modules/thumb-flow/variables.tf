@@ -8,6 +8,11 @@ variable "raw_bucket_name" {
   type        = string
 }
 
+variable "thumbnail_bucket_name" {
+  description = "Name of the S3 bucket for thumbnail images"
+  type        = string
+}
+
 variable "upload_handler_function_name" {
   description = "Name of the Lambda function handling uploads"
   type        = string
@@ -15,6 +20,16 @@ variable "upload_handler_function_name" {
 
 variable "upload_handler_image_uri" {
   description = "URI of the ECR image for the upload handler Lambda function"
+  type        = string
+}
+
+variable "thumbnail_generator_function_name" {
+  description = "Name of the Lambda function generating thumbnails"
+  type        = string
+}
+
+variable "thumbnail_generator_image_uri" {
+  description = "URI of the ECR image for the thumbnail generator Lambda function"
   type        = string
 }
 
