@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 from unittest.mock import Mock
 
 from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExtension
@@ -19,14 +20,14 @@ from dev_blumek_thumbnail_generator.infrastructure.repository.image_repository_m
 
 
 class TestS3ImageQueryGateway(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.image_repository: ImageRepository = Mock(spec=ImageRepository)
         self.s3_image_query_gateway: S3ImageQueryGateway = S3ImageQueryGateway(
             self.image_repository
         )
 
-    def test_should_retrieve_image_successfully(self):
+    def test_should_retrieve_image_successfully(self) -> None:
         self.given_image_can_be_retrieved()
         given_request: RetrieveImageGatewayRequest = (
             self.given_retrieve_image_gateway_request()
@@ -38,7 +39,7 @@ class TestS3ImageQueryGateway(unittest.TestCase):
 
         self.assertEqual(actual_result, self.given_retrieve_image_gateway_reply())
 
-    def given_image_can_be_retrieved(self):
+    def given_image_can_be_retrieved(self) -> None:
         self.image_repository.retrieve.return_value = self.given_retrieve_image_reply()
 
     @staticmethod
@@ -61,7 +62,7 @@ class TestS3ImageQueryGateway(unittest.TestCase):
             image_bytes=b"given_image_bytes",
         )
 
-    def test_should_call_image_repository_to_retrieve_image(self):
+    def test_should_call_image_repository_to_retrieve_image(self) -> None:
         self.given_image_can_be_retrieved()
         given_request: RetrieveImageGatewayRequest = (
             self.given_retrieve_image_gateway_request()

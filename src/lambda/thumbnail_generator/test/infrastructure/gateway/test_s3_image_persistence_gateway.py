@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, List, Dict, Optional  # Dodanie importów dla typów
 from unittest.mock import Mock
 
 from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExtension
@@ -22,7 +23,7 @@ from dev_blumek_thumbnail_generator.infrastructure.repository.image_repository_m
 
 
 class TestS3ImagePersistenceGateway(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.image_repository: ImageRepository = Mock(spec=ImageRepository)
         self.image_key_factory: ImageKeyFactory = Mock(spec=ImageKeyFactory)
@@ -30,7 +31,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
             S3ImagePersistenceGateway(self.image_repository, self.image_key_factory)
         )
 
-    def test_should_store_image_successfully(self):
+    def test_should_store_image_successfully(self) -> None:
         self.given_image_key_factory_creates_key()
         self.given_image_can_be_stored()
         given_request: StoreImageGatewayRequest = (
@@ -43,10 +44,10 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
 
         self.assertEqual(actual_result, self.given_store_image_gateway_reply())
 
-    def given_image_key_factory_creates_key(self):
+    def given_image_key_factory_creates_key(self) -> None:
         self.image_key_factory.create_key.return_value = "given_s3_key"
 
-    def given_image_can_be_stored(self):
+    def given_image_can_be_stored(self) -> None:
         self.image_repository.store.return_value = self.given_store_image_reply()
 
     @staticmethod
@@ -65,7 +66,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
     def given_store_image_gateway_reply() -> StoreImageGatewayReply:
         return StoreImageGatewayReply(image_key="given_s3_key")
 
-    def test_should_call_image_key_factory_to_create_key(self):
+    def test_should_call_image_key_factory_to_create_key(self) -> None:
         self.given_image_key_factory_creates_key()
         self.given_image_can_be_stored()
         given_request: StoreImageGatewayRequest = (
@@ -76,7 +77,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
 
         self.image_key_factory.create_key.assert_called_once_with("given_image_name")
 
-    def test_should_call_image_repository_to_store_image(self):
+    def test_should_call_image_repository_to_store_image(self) -> None:
         self.given_image_key_factory_creates_key()
         self.given_image_can_be_stored()
         given_request: StoreImageGatewayRequest = (
@@ -99,4 +100,4 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pass

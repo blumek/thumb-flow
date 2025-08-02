@@ -1,5 +1,9 @@
 import unittest
 from unittest.mock import Mock, MagicMock
+from typing import Any, Dict
+
+from mypy_boto3_s3.client import S3Client
+from botocore.exceptions import ClientError
 
 from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExtension
 from dev_blumek_thumbnail_generator.infrastructure.repository.image_repository_model import (
@@ -18,12 +22,12 @@ from dev_blumek_thumbnail_generator.infrastructure.repository.s3_image_repositor
 class TestS3ImageRepository(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.s3_client = Mock()
-        self.s3_image_repository = S3ImageRepository(
+        self.s3_client: S3Client = Mock()
+        self.s3_image_repository: S3ImageRepository = S3ImageRepository(
             s3_client=self.s3_client, bucket_name="given_bucket_name"
         )
 
-    def test_should_store_image_successfully(self):
+    def test_should_store_image_successfully(self) -> None:
         self.given_s3_put_object_succeeds()
         given_request: StoreImageRequest = self.given_store_image_request()
 
@@ -31,7 +35,7 @@ class TestS3ImageRepository(unittest.TestCase):
 
         self.assertEqual(actual_result, self.given_expected_store_image_reply())
 
-    def given_s3_put_object_succeeds(self):
+    def given_s3_put_object_succeeds(self) -> None:
         self.s3_client.put_object.return_value = None
 
     @staticmethod
@@ -46,7 +50,7 @@ class TestS3ImageRepository(unittest.TestCase):
     def given_expected_store_image_reply() -> StoreImageReply:
         return StoreImageReply(image_key="given_image_key")
 
-    def test_should_call_the_underlying_s3_client_to_put_object(self):
+    def test_should_call_the_underlying_s3_client_to_put_object(self) -> None:
         self.given_s3_put_object_succeeds()
         given_request: StoreImageRequest = self.given_store_image_request()
 
@@ -59,7 +63,7 @@ class TestS3ImageRepository(unittest.TestCase):
             ContentType="image/png",
         )
 
-    def test_should_raise_s3_upload_error_when_s3_client_fails(self):
+    def test_should_raise_s3_upload_error_when_s3_client_fails(self) -> None:
         self.given_s3_put_object_fails()
         given_request: StoreImageRequest = self.given_store_image_request()
 
@@ -68,10 +72,10 @@ class TestS3ImageRepository(unittest.TestCase):
 
         self.assertIn("Failed to store image: given_image_key", str(context.exception))
 
-    def given_s3_put_object_fails(self):
+    def given_s3_put_object_fails(self) -> None:
         self.s3_client.put_object.side_effect = Exception("S3 connection error")
 
-    def test_should_retrieve_image_successfully(self):
+    def test_should_retrieve_image_successfully(self) -> None:
         self.given_s3_get_object_succeeds()
         given_request: RetrieveImageRequest = self.given_retrieve_image_request()
 
@@ -81,15 +85,15 @@ class TestS3ImageRepository(unittest.TestCase):
 
         self.assertEqual(actual_result, self.given_expected_retrieve_image_reply())
 
-    def given_s3_get_object_succeeds(self):
+    def given_s3_get_object_succeeds(self) -> None:
         self.s3_client.get_object.return_value = self.given_s3_response()
 
-    def given_s3_response(self):
+    def given_s3_response(self) -> Dict[str, Any]:
         return {"Body": self.given_s3_response_body(), "ContentType": "image/png"}
 
     @staticmethod
-    def given_s3_response_body():
-        mock_body = MagicMock()
+    def given_s3_response_body() -> MagicMock:
+        mock_body: MagicMock = MagicMock()
         mock_body.read.return_value = b"given_image_bytes"
         return mock_body
 
@@ -105,7 +109,7 @@ class TestS3ImageRepository(unittest.TestCase):
             image_bytes=b"given_image_bytes",
         )
 
-    def test_should_call_the_underlying_s3_client_to_get_object(self):
+    def test_should_call_the_underlying_s3_client_to_get_object(self) -> None:
         self.given_s3_get_object_succeeds()
         given_request: RetrieveImageRequest = self.given_retrieve_image_request()
 
@@ -116,7 +120,7 @@ class TestS3ImageRepository(unittest.TestCase):
             Key="given_image_key",
         )
 
-    def test_should_raise_s3_retrieve_error_when_image_not_found(self):
+    def test_should_raise_s3_retrieve_error_when_image_not_found(self) -> None:
         self.given_s3_get_object_raises_no_such_key_exception()
         given_request: RetrieveImageRequest = self.given_retrieve_image_request()
 
@@ -127,13 +131,13 @@ class TestS3ImageRepository(unittest.TestCase):
             "Image under key: given_image_key not found", str(context.exception)
         )
 
-    def given_s3_get_object_raises_no_such_key_exception(self):
+    def given_s3_get_object_raises_no_such_key_exception(self) -> None:
         self.s3_client.exceptions.NoSuchKey = Exception
         self.s3_client.get_object.side_effect = self.s3_client.exceptions.NoSuchKey(
             "givenMessage"
         )
 
-    def test_should_raise_s3_retrieve_error_when_s3_client_fails(self):
+    def test_should_raise_s3_retrieve_error_when_s3_client_fails(self) -> None:
         self.given_s3_get_object_fails()
         given_request: RetrieveImageRequest = self.given_retrieve_image_request()
 
@@ -144,10 +148,10 @@ class TestS3ImageRepository(unittest.TestCase):
             "Failed to retrieve image: given_image_key", str(context.exception)
         )
 
-    def given_s3_get_object_fails(self):
+    def given_s3_get_object_fails(self) -> None:
         self.s3_client.exceptions = Mock()
 
-        class NoSuchKey(Exception):
+        class NoSuchKey(ClientError):
             pass
 
         self.s3_client.exceptions.NoSuchKey = NoSuchKey
