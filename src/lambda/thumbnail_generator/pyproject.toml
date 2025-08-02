@@ -53,6 +53,7 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 omit = [
+    "src/dev_blumek_thumbnail_generator/bootstrap/application_bootstrap.py",
     "*__init__.py",
 ]
 data_file = "build/reports/coverage/.coverage"
