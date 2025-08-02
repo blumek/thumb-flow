@@ -4,7 +4,9 @@ from typing import Dict, Any
 
 from aws_lambda_typing.context import Context as LambdaContext
 
-from dev_blumek_upload_handler.bootstrap.application_bootstrap import upload_image_use_case
+from dev_blumek_upload_handler.bootstrap.application_bootstrap import (
+    upload_image_use_case,
+)
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
 from dev_blumek_upload_handler.application.use_case.image_upload_use_case_model import (
     StoreImageUseCaseRequest,
