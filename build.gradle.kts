@@ -117,6 +117,7 @@ subprojects {
         group = "verification"
         description = "Execute the actual integration tests"
         dependsOn("installDevDependencies")
+        finalizedBy("afterIntegrationTest")
 
         val testReportsDir = layout.buildDirectory.dir("reports/tests")
         val projectDir = layout.projectDirectory.asFile
@@ -130,6 +131,7 @@ subprojects {
                     .filter { it.isFile && it.name.startsWith("it_") && it.name.endsWith(".py") }
                     .map { it.relativeTo(projectDir).path }
                     .toList()
+
                 else -> emptyList()
             }
 
@@ -149,7 +151,6 @@ subprojects {
         group = "verification"
         description = "Run integration tests for $projectName"
         dependsOn("beforeIntegrationTest", "runIntegrationTests")
-        finalizedBy("afterIntegrationTest")
     }
 
     tasks.named("runIntegrationTests") {
