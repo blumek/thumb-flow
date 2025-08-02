@@ -40,3 +40,4 @@ class ImageExtension(Enum):
                 return ext_type
 
         raise Exception(f"Unknown MIME type: {mime_type}")
+
