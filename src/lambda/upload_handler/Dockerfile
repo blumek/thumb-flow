@@ -15,4 +15,4 @@ COPY src/ /tmp/src/
 RUN pip install /tmp/*.whl && \
     cp -r /tmp/src/* ${LAMBDA_TASK_ROOT}/ && \
     rm -rf /tmp/src /tmp/*.whl
-CMD [ "dev_blumek_upload_handler.handler.lambda_handler" ]
+CMD [ "dev_blumek_upload_handler.bootstrap.handler.lambda_handler" ]
