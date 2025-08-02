@@ -5,20 +5,18 @@ import org.gradle.kotlin.dsl.*
 
 class LocalStackPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        with(project) {
+        project.run {
             val localStackExtension = extensions.create<LocalStackExtension>("localStack")
 
             afterEvaluate {
-                val projectName = project.name
-
-                configureTasks(localStackExtension.toConfigureTasksRequest(projectName))
-                configureIntegrationTests(localStackExtension, projectName)
+                configureTasks(localStackExtension.toConfigureTasksRequest(name))
+                configureIntegrationTests(localStackExtension, name)
             }
         }
     }
 
-    private fun LocalStackExtension.toConfigureTasksRequest(projectName: String): ConfigureTasksRequest {
-        return ConfigureTasksRequest(
+    private fun LocalStackExtension.toConfigureTasksRequest(projectName: String) =
+        ConfigureTasksRequest(
             containerName = containerName.get(),
             port = port.get(),
             services = services.get(),
@@ -28,7 +26,6 @@ class LocalStackPlugin : Plugin<Project> {
             extension = this,
             projectName = projectName
         )
-    }
 
     private fun Project.configureTasks(request: ConfigureTasksRequest) {
         tasks.register<Exec>("localstackStart") {
@@ -132,25 +129,20 @@ class LocalStackPlugin : Plugin<Project> {
     }
 
     private fun waitForLocalStackReady(endpoint: String) {
-        var attempts = 0
         val maxAttempts = 30
-        while (attempts < maxAttempts) {
-            try {
-                val healthCheck =
-                    ProcessBuilder("curl", "-s", "$endpoint/_localstack/health")
-                        .start()
-                healthCheck.waitFor()
-                if (healthCheck.exitValue() == 0) {
+
+        repeat(maxAttempts) { attempt ->
+            kotlin.runCatching {
+                val healthCheck = ProcessBuilder("curl", "-s", "$endpoint/_localstack/health").start()
+                if (healthCheck.waitFor() == 0 && healthCheck.exitValue() == 0) {
                     println("LocalStack is ready!")
                     Thread.sleep(2000)
                     return
                 }
-            } catch (_: Exception) {
-                // Ignore exceptions, will retry
             }
-            attempts++
+
             Thread.sleep(1000)
-            println("Waiting for LocalStack... (attempt $attempts/$maxAttempts)")
+            println("Waiting for LocalStack... (attempt ${attempt + 1}/$maxAttempts)")
         }
 
         throw RuntimeException("LocalStack failed to start within expected time")
