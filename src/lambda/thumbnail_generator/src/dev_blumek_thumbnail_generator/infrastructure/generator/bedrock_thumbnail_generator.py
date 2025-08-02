@@ -108,8 +108,7 @@ class BedrockThumbnailGenerator(ThumbnailGenerator):
 
             if self.__is_content_available(response_data):
                 base64_image = self.__get_image_base64(response_data)
-                if base64_image:
-                    return base64.b64decode(base64_image)
+                return base64.b64decode(base64_image)
 
             logger.error(f"Unexpected response format: {response_data}")
             raise BedrockThumbnailGenerationError(
@@ -122,12 +121,17 @@ class BedrockThumbnailGenerator(ThumbnailGenerator):
             ) from exception
 
     @staticmethod
-    def __is_content_available(response_data):
+    def __is_content_available(response_data: Dict[str, Any]) -> bool:
         return "artifacts" in response_data and len(response_data["artifacts"]) > 0
 
     @staticmethod
-    def __get_image_base64(response_data):
-        return response_data["artifacts"][0].get("base64")
+    def __get_image_base64(response_data: Dict[str, Any]) -> str:
+        base64_value: str = response_data["artifacts"][0].get("base64")
+        if base64_value is None:
+            raise BedrockThumbnailGenerationError(
+                "Missing base64 data in Bedrock response"
+            )
+        return base64_value
 
     @staticmethod
     def __read(body: StreamingBody) -> bytes:

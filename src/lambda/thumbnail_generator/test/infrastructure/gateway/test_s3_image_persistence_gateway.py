@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, List, Dict, Optional  # Dodanie importów dla typów
+from typing import Any
 from unittest.mock import Mock
 
 from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExtension

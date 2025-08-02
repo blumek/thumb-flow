@@ -134,6 +134,7 @@ class LocalStackPlugin : Plugin<Project> {
         repeat(maxAttempts) { attempt ->
             kotlin.runCatching {
                 val healthCheck = ProcessBuilder("curl", "-s", "$endpoint/_localstack/health").start()
+
                 if (healthCheck.waitFor() == 0 && healthCheck.exitValue() == 0) {
                     println("LocalStack is ready!")
                     Thread.sleep(2000)
