@@ -13,6 +13,11 @@ variable "thumbnail_bucket_name" {
   type        = string
 }
 
+variable "thumbnail_generation_queue_name" {
+  description = "Name of the SQS queue for thumbnail generation events"
+  type        = string
+}
+
 variable "upload_handler_function_name" {
   description = "Name of the Lambda function handling uploads"
   type        = string

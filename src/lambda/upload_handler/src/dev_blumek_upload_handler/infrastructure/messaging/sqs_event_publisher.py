@@ -6,6 +6,7 @@ from mypy_boto3_sqs.type_defs import (
     SendMessageResultTypeDef,
     MessageAttributeValueTypeDef,
 )
+from mypy_boto3_sqs.type_defs import GetQueueUrlResultTypeDef
 
 from dev_blumek_upload_handler.infrastructure.messaging.event import Event
 from dev_blumek_upload_handler.infrastructure.messaging.event_publisher import (
@@ -19,7 +20,7 @@ class SQSEventPublisher(EventPublisher):
 
     def publish(self, event: Event) -> None:
         response: SendMessageResultTypeDef = self.sqs_client.send_message(
-            QueueUrl=event.queue(),
+            QueueUrl=self.__to_queue_url(event),
             MessageBody=json.dumps(event.content()),
             MessageAttributes=self.to_message_attributes(event),
         )
@@ -28,6 +29,12 @@ class SQSEventPublisher(EventPublisher):
             raise SQSEventPublishingError(
                 f"Failed to publish event to SQS queue {event.queue()}: {response}"
             )
+
+    def __to_queue_url(self, event: Event) -> str:
+        queue_url_result: GetQueueUrlResultTypeDef = self.sqs_client.get_queue_url(
+            QueueName=event.queue()
+        )
+        return queue_url_result["QueueUrl"]
 
     @staticmethod
     def to_message_attributes(
