@@ -4,6 +4,7 @@ from typing import Optional
 import boto3
 
 from mypy_boto3_s3.client import S3Client
+from mypy_boto3_sqs.client import SQSClient
 
 from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_service import (
     InitializeThumbnailGenerationService,
@@ -24,6 +25,12 @@ from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway 
 from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import (
     S3ImagePersistenceGateway,
 )
+from dev_blumek_upload_handler.infrastructure.messaging.event_publisher import (
+    EventPublisher,
+)
+from dev_blumek_upload_handler.infrastructure.messaging.sqs_event_publisher import (
+    SQSEventPublisher,
+)
 from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy import (
     CompositeImagePolicy,
 )
@@ -42,15 +49,16 @@ from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository imp
 )
 
 
-def upload_image_use_case() -> InitializeThumbnailGenerationUseCase:
+def initialize_thumbnail_generation_use_case() -> InitializeThumbnailGenerationUseCase:
     return InitializeThumbnailGenerationService(
-        image_persistence_gateway(
+        image_persistence_gateway=image_persistence_gateway(
             image_repository=s3_image_repository(
                 s3_client=s3_client(), bucket_name=bucket_name()
             ),
             image_policy=image_policy(),
             key_factory=key_factory(),
-        )
+        ),
+        event_publisher=given_event_publisher(sqs_client=sqs_client()),
     )
 
 
@@ -88,6 +96,14 @@ def image_policy() -> ImagePolicy:
 
 def key_factory() -> ImageKeyFactory:
     return UniqueImageKeyFactory()
+
+
+def given_event_publisher(sqs_client: SQSClient) -> EventPublisher:
+    return SQSEventPublisher(sqs_client)
+
+
+def sqs_client() -> SQSClient:
+    return boto3.client("sqs")
 
 
 def load_variable(variable_name: str, default_value: Optional[str] = None) -> str:

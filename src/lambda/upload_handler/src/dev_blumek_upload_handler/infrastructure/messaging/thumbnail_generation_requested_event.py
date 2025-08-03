@@ -1,4 +1,5 @@
 from dev_blumek_upload_handler.infrastructure.messaging.event import Event
+from typing import Any
 
 
 class ThumbnailGenerationRequestedEvent(Event):
@@ -12,7 +13,7 @@ class ThumbnailGenerationRequestedEvent(Event):
     def content(self) -> dict[str, str]:
         return {"uploaded_image_key": self._uploaded_image_key, "prompt": self._prompt}
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, ThumbnailGenerationRequestedEvent):
             return False
         return (
