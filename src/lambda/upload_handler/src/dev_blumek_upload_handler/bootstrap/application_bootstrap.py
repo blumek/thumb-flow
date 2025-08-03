@@ -5,11 +5,11 @@ import boto3
 
 from mypy_boto3_s3.client import S3Client
 
-from dev_blumek_upload_handler.application.use_case.image_upload_service import (
-    UploadImageService,
+from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_service import (
+    InitializeThumbnailGenerationService,
 )
-from dev_blumek_upload_handler.application.use_case.image_upload_use_case import (
-    UploadImageUseCase,
+from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_use_case import (
+    InitializeThumbnailGenerationUseCase,
 )
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
 from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import (
@@ -42,8 +42,8 @@ from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository imp
 )
 
 
-def upload_image_use_case() -> UploadImageUseCase:
-    return UploadImageService(
+def upload_image_use_case() -> InitializeThumbnailGenerationUseCase:
+    return InitializeThumbnailGenerationService(
         image_persistence_gateway(
             image_repository=s3_image_repository(
                 s3_client=s3_client(), bucket_name=bucket_name()

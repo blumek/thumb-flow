@@ -8,9 +8,9 @@ from dev_blumek_upload_handler.bootstrap.application_bootstrap import (
     upload_image_use_case,
 )
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
-from dev_blumek_upload_handler.application.use_case.image_upload_use_case_model import (
-    StoreImageUseCaseRequest,
-    StoreImageUseCaseReply,
+from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_use_case_model import (
+    InitializeThumbnailGenerationUseCaseRequest,
+    InitializeThumbnailGenerationUseCaseReply,
 )
 
 upload_image = upload_image_use_case()
@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     try:
-        store_image_request: StoreImageUseCaseRequest = __to_store_image_request(event)
-        store_image_reply: StoreImageUseCaseReply = upload_image.upload_image(
-            store_image_request
+        store_image_request: InitializeThumbnailGenerationUseCaseRequest = (
+            __to_store_image_request(event)
+        )
+        store_image_reply: InitializeThumbnailGenerationUseCaseReply = (
+            upload_image.upload_image(store_image_request)
         )
         return {
             "statusCode": 200,
@@ -35,13 +37,15 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         return {"statusCode": 500, "body": f"Internal server error: {e}"}
 
 
-def __to_store_image_request(event: Dict[str, Any]) -> StoreImageUseCaseRequest:
+def __to_store_image_request(
+    event: Dict[str, Any],
+) -> InitializeThumbnailGenerationUseCaseRequest:
     required_fields: list[str] = ["image_name", "image_extension", "image_bytes"]
     for field in required_fields:
         if field not in event:
             raise KeyError(field)
 
-    return StoreImageUseCaseRequest(
+    return InitializeThumbnailGenerationUseCaseRequest(
         image_name=event["image_name"],
         image_extension=ImageExtension.from_extension(event["image_extension"]),
         image_bytes=base64.b64decode(event["image_bytes"]),
