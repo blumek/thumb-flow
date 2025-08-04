@@ -7,9 +7,6 @@ class ThumbnailGenerationRequestedEvent(Event):
         self._uploaded_image_key: str = uploaded_image_key
         self._prompt: str = prompt
 
-    def queue(self) -> str:
-        return "thumbnail-generation-requests"
-
     def content(self) -> dict[str, str]:
         return {"uploaded_image_key": self._uploaded_image_key, "prompt": self._prompt}
 

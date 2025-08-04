@@ -59,10 +59,7 @@ def initialize_thumbnail_generation_use_case() -> InitializeThumbnailGenerationU
             key_factory=key_factory(),
         ),
         event_publisher=given_event_publisher(
-            sqs_client=sqs_client(
-                queue_url=load_variable("AWS_SQS_QUEUE_URL"),
-                aws_region=load_variable("AWS_REGION", default_value="us-east-1"),
-            )
+            sqs_client=sqs_client(aws_region=aws_region()), queue_url=queue_url()
         ),
     )
 
@@ -103,12 +100,20 @@ def key_factory() -> ImageKeyFactory:
     return UniqueImageKeyFactory()
 
 
-def given_event_publisher(sqs_client: SQSClient) -> EventPublisher:
-    return SQSEventPublisher(sqs_client)
+def given_event_publisher(sqs_client: SQSClient, queue_url: str) -> EventPublisher:
+    return SQSEventPublisher(sqs_client, queue_url)
 
 
-def sqs_client(queue_url: str, aws_region: str) -> SQSClient:
-    return boto3.client("sqs", region_name=aws_region, endpoint_url=queue_url)
+def sqs_client(aws_region: str) -> SQSClient:
+    return boto3.client("sqs", region_name=aws_region)
+
+
+def aws_region() -> str:
+    return load_variable("AWS_REGION", default_value="us-east-1")
+
+
+def queue_url() -> str:
+    return load_variable("AWS_SQS_QUEUE_URL")
 
 
 def load_variable(variable_name: str, default_value: Optional[str] = None) -> str:

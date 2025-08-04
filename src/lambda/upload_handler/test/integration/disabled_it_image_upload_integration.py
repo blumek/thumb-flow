@@ -44,13 +44,11 @@ class TestImageUploadIntegration:
     def test_upload_image_end_to_end(self, s3_client, s3_bucket, monkeypatch):
         monkeypatch.setenv("AWS_S3_BUCKET_NAME", s3_bucket)
         monkeypatch.setenv("AWS_SQS_QUEUE_URL", "http://localhost:4566")
-        pass
+        given_event: dict[str, str] = self.given_request()
 
-        # given_event: dict[str, str] = self.given_request()
-        #
-        # actual_response: dict[str, str] = self.when_handling(given_event)
-        #
-        # self.then_process_passes_as_expected(actual_response, s3_bucket, s3_client)
+        actual_response: dict[str, str] = self.when_handling(given_event)
+
+        self.then_process_passes_as_expected(actual_response, s3_bucket, s3_client)
 
     def given_request(self):
         event: dict[str, str] = {
