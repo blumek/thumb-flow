@@ -16,10 +16,10 @@ module "thumbnail_bucket" {
 module "thumbnail_generation_queue" {
   source = "../sqs"
 
-  queue_name                  = var.thumbnail_generation_queue_name
-  visibility_timeout_seconds  = 120  # Dopasowany do timeoutu lambdy
-  message_retention_seconds   = 86400  # 1 dzień
-  tags                        = merge(var.tags, { Environment = var.environment })
+  queue_name                 = var.thumbnail_generation_queue_name
+  visibility_timeout_seconds = 120   # Dopasowany do timeoutu lambdy
+  message_retention_seconds  = 86400 # 1 dzień
+  tags                       = merge(var.tags, { Environment = var.environment })
 }
 
 module "upload_function" {
@@ -31,8 +31,8 @@ module "upload_function" {
   memory_size   = 256
 
   environment_variables = {
-    AWS_S3_BUCKET_NAME     = module.raw_images_bucket.bucket_name
-    AWS_SQS_QUEUE_URL      = module.thumbnail_generation_queue.queue_url
+    AWS_S3_BUCKET_NAME = module.raw_images_bucket.bucket_name
+    AWS_SQS_QUEUE_URL  = module.thumbnail_generation_queue.queue_url
   }
 
   enable_s3_output_policy = true
