@@ -164,7 +164,7 @@ class TestThumbnailGeneratorIntegration:
     @staticmethod
     def given_valid_request(image_key: str) -> Dict[str, str]:
         return {
-            "image_key": image_key,
+            "uploaded_image_key": image_key,
             "prompt": "Generate a thumbnail with red border",
         }
 
@@ -218,7 +218,7 @@ class TestThumbnailGeneratorIntegration:
             monkeypatch, given_raw_bucket, given_thumbnail_bucket
         )
 
-        event: Dict[str, str] = {"image_key": "given_image_key"}
+        event: Dict[str, str] = {"uploaded_image_key": "given_image_key"}
         response: Dict[str, Any] = self.when_invoking_function(event)
 
         assert response == {

@@ -38,12 +38,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 def __to_generate_thumbnail_request(
     event: Dict[str, Any],
 ) -> GenerateThumbnailUseCaseRequest:
-    required_fields: list[str] = ["image_key", "prompt"]
+    required_fields: list[str] = ["uploaded_image_key", "prompt"]
     for field in required_fields:
         if field not in event:
             raise KeyError(field)
 
     return GenerateThumbnailUseCaseRequest(
-        image_key=event["image_key"],
+        image_key=event["uploaded_image_key"],
         prompt=event["prompt"],
     )
