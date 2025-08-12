@@ -1,12 +1,11 @@
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple, Type
 
 from aws_lambda_typing.context import Context as LambdaContext
 
 from dev_blumek_thumbnail_generator.application.use_case.generate_thumbail_use_case_model import (
     GenerateThumbnailUseCaseRequest,
-    GenerateThumbnailUseCaseReply,
 )
 from dev_blumek_thumbnail_generator.bootstrap.application_bootstrap import (
     generate_thumbnail_use_case,
@@ -15,55 +14,73 @@ from dev_blumek_thumbnail_generator.bootstrap.application_bootstrap import (
 generate_thumbnail = generate_thumbnail_use_case()
 logger = logging.getLogger(__name__)
 
+error_mappings: Dict[Type[Exception], Tuple[int, str]] = {
+    KeyError: (400, "Missing required field"),
+    ValueError: (400, "Invalid data format"),
+    Exception: (500, "Internal server error"),
+}
+
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
+    if not event.get("Records"):
+        logger.error("Event does not contain Records")
+        return {"statusCode": 400, "body": "Invalid SQS event format"}
+
+    responses: List[Dict[str, Any]] = []
+    for record in event.get("Records", []):
+        responses.append(__generate_thumbnail(record))
+
+    status_code: int = 200 if all(r.get("success", False) for r in responses) else 207
+
+    return {
+        "statusCode": status_code,
+        "body": json.dumps({"responses": responses}),
+    }
+
+
+def __generate_thumbnail(record: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        if "Records" not in event:
-            logger.error("Event does not contain Records")
-            return {"statusCode": 400, "body": "Invalid SQS event format"}
+        thumbnail_request: GenerateThumbnailUseCaseRequest = (
+            _to_generate_thumbnail_request(record)
+        )
+        thumbnail_reply = generate_thumbnail.generate_thumbnail(thumbnail_request)
+        return {
+            "statusCode": 200,
+            "image_key": thumbnail_reply.thumbnail_key,
+            "success": True,
+        }
+    except Exception as exception:
+        error_type: Type[Exception] = type(exception)
+        status_code: int
+        message_prefix: str
+        status_code, message_prefix = error_mappings.get(
+            error_type, error_mappings[Exception]
+        )
 
-        responses = []
-        for record in event["Records"]:
-            generate_thumbnail_request: GenerateThumbnailUseCaseRequest = (
-                __to_generate_thumbnail_request(record)
-            )
-            generate_thumbnail_reply: GenerateThumbnailUseCaseReply = (
-                generate_thumbnail.generate_thumbnail(generate_thumbnail_request)
-            )
-            responses.append(
-                {
-                    "statusCode": 200,
-                    "image_key": generate_thumbnail_reply.thumbnail_key,
-                }
-            )
-
-        return {"statusCode": 200, "body": json.dumps({"responses": responses})}
-    except KeyError as e:
-        logger.error(f"Missing required field in event: {e}")
-        return {"statusCode": 400, "body": f"Missing required field: {e}"}
-    except Exception as e:
-        logger.error(f"Error processing request: {e}")
-        return {"statusCode": 500, "body": f"Internal server error: {e}"}
+        return {
+            "statusCode": status_code,
+            "error": f"{message_prefix}: {str(exception)}",
+            "success": False,
+        }
 
 
-def __to_generate_thumbnail_request(
+def _to_generate_thumbnail_request(
     record: Dict[str, Any],
 ) -> GenerateThumbnailUseCaseRequest:
     try:
-        if "body" in record:
-            message_body = json.loads(record["body"])
-        else:
-            message_body = record
-
-        required_fields: list[str] = ["uploaded_image_key", "prompt"]
-        for field in required_fields:
-            if field not in message_body:
-                raise KeyError(field)
-
-        return GenerateThumbnailUseCaseRequest(
-            image_key=message_body["uploaded_image_key"],
-            prompt=message_body["prompt"],
+        message_body: Dict[str, Any] = (
+            json.loads(record["body"]) if "body" in record else record
         )
+
+        image_key = message_body.get("uploaded_image_key")
+        if not image_key:
+            raise KeyError("uploaded_image_key")
+
+        prompt = message_body.get("prompt")
+        if not prompt:
+            raise KeyError("prompt")
+
+        return GenerateThumbnailUseCaseRequest(image_key=image_key, prompt=prompt)
     except json.JSONDecodeError:
-        logger.error("Failed to parse SQS message body as JSON")
+        logger.error("Invalid JSON in SQS message body")
         raise ValueError("Invalid JSON in SQS message body")
