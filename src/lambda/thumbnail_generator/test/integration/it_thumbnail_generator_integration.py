@@ -162,11 +162,12 @@ class TestThumbnailGeneratorIntegration:
         return buffer
 
     @staticmethod
-    def given_valid_request(image_key: str) -> Dict[str, str]:
-        return {
-            "image_key": image_key,
+    def given_valid_request(image_key: str) -> Dict[str, Any]:
+        message_body = {
+            "uploaded_image_key": image_key,
             "prompt": "Generate a thumbnail with red border",
         }
+        return {"Records": [{"body": json.dumps(message_body)}]}
 
     def when_invoking_function(self, event: Dict[str, str]) -> Dict[str, Any]:
         lambda_context: Context = self.given_lambda_context()
@@ -191,9 +192,16 @@ class TestThumbnailGeneratorIntegration:
         given_s3_client: S3Client,
     ) -> None:
         assert response["statusCode"] == 200
-        assert "image_key" in response
+        assert "body" in response
 
-        thumbnail_key: str = response["image_key"]
+        response_body = json.loads(response["body"])
+        assert "responses" in response_body
+        assert len(response_body["responses"]) > 0
+
+        first_response = response_body["responses"][0]
+        assert "image_key" in first_response
+
+        thumbnail_key: str = first_response["image_key"]
         actual_thumbnail_bytes: bytes = self.given_image_from_s3(
             given_s3_client, given_thumbnail_bucket, thumbnail_key
         )
@@ -218,10 +226,17 @@ class TestThumbnailGeneratorIntegration:
             monkeypatch, given_raw_bucket, given_thumbnail_bucket
         )
 
-        event: Dict[str, str] = {"image_key": "given_image_key"}
+        message_body: Dict[str, str] = {"uploaded_image_key": "given_image_key"}
+        event: Dict[str, Any] = {"Records": [{"body": json.dumps(message_body)}]}
         response: Dict[str, Any] = self.when_invoking_function(event)
 
-        assert response == {
-            "statusCode": 400,
-            "body": "Missing required field: 'prompt'",
-        }
+        assert response["statusCode"] == 207
+        response_body = json.loads(response["body"])
+        assert "responses" in response_body
+        assert len(response_body["responses"]) == 1
+
+        first_response = response_body["responses"][0]
+        assert first_response["statusCode"] == 400
+        assert "error" in first_response
+        assert "Missing required field: 'prompt'" in first_response["error"]
+        assert first_response["success"] is False

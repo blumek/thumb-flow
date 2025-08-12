@@ -4,12 +4,13 @@ from typing import Optional
 import boto3
 
 from mypy_boto3_s3.client import S3Client
+from mypy_boto3_sqs.client import SQSClient
 
-from dev_blumek_upload_handler.application.use_case.image_upload_service import (
-    UploadImageService,
+from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_service import (
+    InitializeThumbnailGenerationService,
 )
-from dev_blumek_upload_handler.application.use_case.image_upload_use_case import (
-    UploadImageUseCase,
+from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generation_use_case import (
+    InitializeThumbnailGenerationUseCase,
 )
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
 from dev_blumek_upload_handler.infrastructure.factory.image_key_factory import (
@@ -23,6 +24,12 @@ from dev_blumek_upload_handler.infrastructure.gateway.image_persistence_gateway 
 )
 from dev_blumek_upload_handler.infrastructure.gateway.s3_image_persistence_gateway import (
     S3ImagePersistenceGateway,
+)
+from dev_blumek_upload_handler.infrastructure.messaging.event_publisher import (
+    EventPublisher,
+)
+from dev_blumek_upload_handler.infrastructure.messaging.sqs_event_publisher import (
+    SQSEventPublisher,
 )
 from dev_blumek_upload_handler.infrastructure.policy.composite_image_policy import (
     CompositeImagePolicy,
@@ -42,15 +49,18 @@ from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository imp
 )
 
 
-def upload_image_use_case() -> UploadImageUseCase:
-    return UploadImageService(
-        image_persistence_gateway(
+def initialize_thumbnail_generation_use_case() -> InitializeThumbnailGenerationUseCase:
+    return InitializeThumbnailGenerationService(
+        image_persistence_gateway=image_persistence_gateway(
             image_repository=s3_image_repository(
                 s3_client=s3_client(), bucket_name=bucket_name()
             ),
             image_policy=image_policy(),
             key_factory=key_factory(),
-        )
+        ),
+        event_publisher=given_event_publisher(
+            sqs_client=sqs_client(aws_region=aws_region()), queue_url=queue_url()
+        ),
     )
 
 
@@ -88,6 +98,22 @@ def image_policy() -> ImagePolicy:
 
 def key_factory() -> ImageKeyFactory:
     return UniqueImageKeyFactory()
+
+
+def given_event_publisher(sqs_client: SQSClient, queue_url: str) -> EventPublisher:
+    return SQSEventPublisher(sqs_client, queue_url)
+
+
+def sqs_client(aws_region: str) -> SQSClient:
+    return boto3.client("sqs", region_name=aws_region)
+
+
+def aws_region() -> str:
+    return load_variable("AWS_REGION", default_value="us-east-1")
+
+
+def queue_url() -> str:
+    return load_variable("AWS_SQS_QUEUE_URL")
 
 
 def load_variable(variable_name: str, default_value: Optional[str] = None) -> str:
