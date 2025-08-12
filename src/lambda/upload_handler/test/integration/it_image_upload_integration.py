@@ -1,0 +1,193 @@
+import base64
+import json
+import os
+import uuid
+from io import BytesIO
+from typing import Any, Dict, List, Tuple, cast
+
+import boto3
+import pytest
+from PIL import Image
+from aws_lambda_typing.context import Context
+from mypy_boto3_s3.client import S3Client
+from mypy_boto3_s3.type_defs import GetObjectOutputTypeDef
+from mypy_boto3_sqs.client import SQSClient
+from mypy_boto3_sqs.type_defs import (
+    CreateQueueResultTypeDef,
+    ReceiveMessageResultTypeDef,
+)
+
+from dev_blumek_upload_handler.bootstrap.handler import lambda_handler
+
+
+class TestImageUploadIntegration:
+    @pytest.fixture
+    def s3_client(self) -> S3Client:
+        return boto3.client(
+            "s3",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
+            region_name=os.environ.get("AWS_REGION", "us-east-1"),
+            endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566"),
+        )
+
+    @pytest.fixture
+    def sqs_client(self) -> SQSClient:
+        return boto3.client(
+            "sqs",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
+            region_name=os.environ.get("AWS_REGION", "us-east-1"),
+            endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566"),
+        )
+
+    @pytest.fixture
+    def s3_bucket(self) -> str:
+        bucket_name: str = os.environ.get("AWS_S3_BUCKET_NAME", "test-bucket")
+        s3: S3Client = boto3.client(
+            "s3",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
+            region_name=os.environ.get("AWS_REGION", "us-east-1"),
+            endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566"),
+        )
+        try:
+            s3.create_bucket(Bucket=bucket_name)
+        except s3.exceptions.BucketAlreadyOwnedByYou:
+            pass
+        except s3.exceptions.BucketAlreadyExists:
+            pass
+
+        return bucket_name
+
+    @pytest.fixture
+    def sqs_queue(self, sqs_client: SQSClient) -> str:
+        queue_name: str = "upload-handler-test-queue"
+        try:
+            response: CreateQueueResultTypeDef = sqs_client.create_queue(
+                QueueName=queue_name
+            )
+            return response["QueueUrl"]
+        except Exception:
+            return sqs_client.get_queue_url(QueueName=queue_name)["QueueUrl"]
+
+    def test_upload_image_end_to_end(
+        self,
+        s3_client: S3Client,
+        s3_bucket: str,
+        sqs_client: SQSClient,
+        sqs_queue: str,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AWS_S3_BUCKET_NAME", s3_bucket)
+        monkeypatch.setenv("AWS_SQS_QUEUE_URL", sqs_queue)
+        monkeypatch.setenv("AWS_REGION", "us-east-1")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", "http://localhost:4566")
+        given_event: Dict[str, str] = self.given_request()
+
+        actual_response: Dict[str, str] = self.when_handling(given_event)
+
+        self.then_process_passes_as_expected(
+            actual_response, s3_bucket, s3_client, sqs_client, sqs_queue
+        )
+
+    def given_request(self) -> Dict[str, str]:
+        event: Dict[str, str] = {
+            "image_name": "test_image",
+            "image_extension": "png",
+            "image_bytes": base64.b64encode(self.given_image_bytes()).decode("utf-8"),
+            "prompt": "Generate a thumbnail for this image",
+        }
+        return event
+
+    @staticmethod
+    def given_image_bytes() -> bytes:
+        img: Image.Image = Image.new("RGB", (100, 100), color="red")
+        buffer: BytesIO = BytesIO()
+        img.save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def when_handling(self, given_event: Dict[str, str]) -> Dict[str, str]:
+        given_lambda_context: Context = self.given_lambda_context()
+        return cast(Dict[str, str], lambda_handler(given_event, given_lambda_context))
+
+    @staticmethod
+    def given_lambda_context() -> Context:
+        class MockLambdaContext(Context):
+            function_name: str = "upload_handler"
+            memory_limit_in_mb: int = 128
+            invoked_function_arn: str = (
+                "arn:aws:lambda:us-east-1:123456789012:function:upload_handler"
+            )
+            aws_request_id: str = str(uuid.uuid4())
+
+        return MockLambdaContext()
+
+    def then_process_passes_as_expected(
+        self,
+        actual_response: Dict[str, str],
+        s3_bucket: str,
+        s3_client: S3Client,
+        sqs_client: SQSClient,
+        sqs_queue: str,
+    ) -> None:
+        assert actual_response["statusCode"] == 200
+        assert "image_key" in actual_response
+        image_key: str = actual_response["image_key"]
+        self.then_image_is_available_in_s3(image_key, s3_bucket, s3_client)
+        self.verify_sqs_message_emitted(image_key, sqs_client, sqs_queue)
+
+    def then_image_is_available_in_s3(
+        self, image_key: str, s3_bucket: str, s3_client: S3Client
+    ) -> None:
+        try:
+            actual_s3_image_data: bytes = self.get_actual_s3_image_data(
+                image_key, s3_bucket, s3_client
+            )
+            assert actual_s3_image_data == self.given_image_bytes()
+
+        except s3_client.exceptions.NoSuchKey:
+            pytest.fail(f"Image with key {image_key} was not found in S3")
+        finally:
+            s3_client.delete_object(Bucket=s3_bucket, Key=image_key)
+
+    @staticmethod
+    def verify_sqs_message_emitted(
+        image_key: str, sqs_client: SQSClient, queue_url: str
+    ) -> None:
+        response: ReceiveMessageResultTypeDef = sqs_client.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=10,
+            WaitTimeSeconds=1,
+            MessageAttributeNames=["All"],
+            VisibilityTimeout=1,
+        )
+
+        messages: List[Dict[str, Any]] = [
+            json.loads(msg.get("Body", "{}")) for msg in response.get("Messages", [])
+        ]
+        matching_messages: List[Tuple[Dict[str, Any], str]] = [
+            (msg, response["Messages"][index]["ReceiptHandle"])
+            for index, msg in enumerate(messages)
+            if msg.get("uploaded_image_key") == image_key
+        ]
+
+        if matching_messages:
+            msg: Dict[str, Any]
+            receipt: str
+            msg, receipt = matching_messages[0]
+            sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt)
+            return
+
+        assert (
+            False
+        ), f"No message with uploaded_image_key {image_key} found in SQS queue {queue_url}"
+
+    @staticmethod
+    def get_actual_s3_image_data(
+        image_key: str, s3_bucket: str, s3_client: S3Client
+    ) -> bytes:
+        s3_response: GetObjectOutputTypeDef = s3_client.get_object(
+            Bucket=s3_bucket, Key=image_key
+        )
+        return s3_response["Body"].read()
