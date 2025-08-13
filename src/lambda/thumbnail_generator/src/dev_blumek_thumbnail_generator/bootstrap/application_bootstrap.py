@@ -129,8 +129,8 @@ def bedrock_configuration() -> BedrockConfiguration:
         model_id=load_variable(
             "AWS_BEDROCK_MODEL_ID", "stability.stable-diffusion-xl-v1"
         ),
-        image_strength=float(load_variable("AWS_BEDROCK_IMAGE_STRENGTH", "0.8")),
-        cfg_scale=int(load_variable("AWS_BEDROCK_CFG_SCALE", "7")),
+        image_strength=float(load_variable("AWS_BEDROCK_IMAGE_STRENGTH", "0.5")),
+        cfg_scale=int(load_variable("AWS_BEDROCK_CFG_SCALE", "14")),
         steps=int(load_variable("AWS_BEDROCK_STEPS", "40")),
     )
 
