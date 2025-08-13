@@ -170,7 +170,7 @@ subprojects {
         inputs.file("pyproject.toml")
         outputs.upToDateWhen { false }
 
-        commandLine(flake8Executable, "src/", "test/", "--max-line-length=100", "--extend-ignore=E203,W503")
+        commandLine(flake8Executable, "src/", "test/", "--max-line-length=110", "--extend-ignore=E203,W503")
     }
 
     tasks.register<Exec>("formatCheck") {
