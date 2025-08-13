@@ -8,6 +8,7 @@ module "thumb_flow" {
   environment                       = "prod"
   raw_bucket_name                   = "thumbflow-raw-images-bucket-prod"
   thumbnail_bucket_name             = "thumbflow-thumbnails-bucket-prod"
+  thumbnail_generation_queue_name   = "thumbflow-thumbnail-generation-queue-prod"
   upload_handler_function_name      = "thumbflow-upload-handler-prod"
   upload_handler_image_uri          = var.upload_handler_image_uri
   thumbnail_generator_function_name = "thumbflow-thumbnail-generator-prod"

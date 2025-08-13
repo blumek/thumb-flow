@@ -4,12 +4,13 @@ from dev_blumek_upload_handler.domain.types.image_extension import ImageExtensio
 
 
 @dataclass(frozen=True)
-class StoreImageUseCaseRequest:
+class InitializeThumbnailGenerationUseCaseRequest:
     image_name: str
     image_extension: ImageExtension
     image_bytes: bytes
+    prompt: str
 
 
 @dataclass(frozen=True)
-class StoreImageUseCaseReply:
+class InitializeThumbnailGenerationUseCaseReply:
     image_key: str
