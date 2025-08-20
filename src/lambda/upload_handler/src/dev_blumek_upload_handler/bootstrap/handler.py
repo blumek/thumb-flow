@@ -1,7 +1,7 @@
 import base64
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, cast
 
 from aws_lambda_typing.context import Context as LambdaContext
 
@@ -63,24 +63,32 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 
 def __extract_body_from_api_gateway_event(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        body = event["body"]
+        body: Any = event["body"]
     except KeyError:
         logger.error("No body found in event")
         raise KeyError("body")
 
     if isinstance(body, str):
-        try:
-            return json.loads(body)
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse body as JSON: {e}")
-            raise ValueError(f"Invalid JSON in request body: {e}")
+        return __as_dict(body)
 
     if isinstance(body, dict):
         return body
 
-    error_msg = f"Unexpected body type: {type(body).__name__}"
+    error_msg: str = f"Unexpected body type: {type(body).__name__}"
     logger.error(error_msg)
     raise ValueError(error_msg)
+
+
+def __as_dict(body: Any) -> Dict[str, Any]:
+    try:
+        parsed: Any = json.loads(body)
+        if not isinstance(parsed, dict):
+            logger.error("Parsed body is not a JSON object")
+            raise ValueError("Request body must be a JSON object")
+        return cast(Dict[str, Any], parsed)
+    except json.JSONDecodeError as exception:
+        logger.error(f"Failed to parse body as JSON: {exception}")
+        raise ValueError(f"Invalid JSON in request body: {exception}")
 
 
 def __to_initialize_thumbnail_generation_request(
