@@ -12,7 +12,6 @@ module "thumbnail_bucket" {
   tags        = merge(var.tags, { Environment = var.environment })
 }
 
-# Dodanie kolejki SQS dla zdarzeń generowania miniatur
 module "thumbnail_generation_queue" {
   source = "../sqs"
 
@@ -55,14 +54,12 @@ module "thumbnail_generator_function" {
     AWS_SQS_QUEUE_URL            = module.thumbnail_generation_queue.queue_url
   }
 
-  # Uprawnienia do odczytu z bucketa z surowymi obrazami
   enable_s3_output_policy = true
   s3_output_bucket_arn    = module.raw_images_bucket.bucket_arn
 
   tags = merge(var.tags, { Environment = var.environment })
 }
 
-# Dodatkowa polityka dla dostępu do bucketa z miniaturami
 resource "aws_iam_policy" "thumbnail_bucket_access" {
   name        = "${var.thumbnail_generator_function_name}-thumbnail-bucket-policy"
   description = "Allows Lambda function to access thumbnail S3 bucket"
@@ -88,7 +85,6 @@ resource "aws_iam_role_policy_attachment" "thumbnail_bucket_access" {
   policy_arn = aws_iam_policy.thumbnail_bucket_access.arn
 }
 
-# Uprawnienia do publikowania wiadomości do SQS dla funkcji upload_handler
 resource "aws_iam_policy" "upload_function_sqs_publish" {
   name        = "${var.upload_handler_function_name}-sqs-publish-policy"
   description = "Allows upload Lambda function to publish messages to SQS"
@@ -114,7 +110,6 @@ resource "aws_iam_role_policy_attachment" "upload_function_sqs_publish" {
   policy_arn = aws_iam_policy.upload_function_sqs_publish.arn
 }
 
-# Uprawnienia do odczytywania wiadomości z SQS dla funkcji thumbnail_generator
 resource "aws_iam_policy" "thumbnail_function_sqs_receive" {
   name        = "${var.thumbnail_generator_function_name}-sqs-receive-policy"
   description = "Allows thumbnail generator function to receive messages from SQS"
@@ -142,7 +137,6 @@ resource "aws_iam_role_policy_attachment" "thumbnail_function_sqs_receive" {
   policy_arn = aws_iam_policy.thumbnail_function_sqs_receive.arn
 }
 
-# Konfiguracja wyzwalacza SQS dla funkcji generującej miniatury
 resource "aws_lambda_event_source_mapping" "thumbnail_generator_sqs_trigger" {
   event_source_arn = module.thumbnail_generation_queue.queue_arn
   function_name    = module.thumbnail_generator_function.function_arn
@@ -172,4 +166,34 @@ resource "aws_iam_policy" "bedrock_access" {
 resource "aws_iam_role_policy_attachment" "bedrock_access" {
   role       = module.thumbnail_generator_function.execution_role_name
   policy_arn = aws_iam_policy.bedrock_access.arn
+}
+
+module "api_gateway" {
+  source = "../api-gateway"
+
+  api_name            = "${var.environment}-thumbflow-api"
+  description         = "API Gateway for ThumbFlow ${var.environment} environment"
+  stage_name          = var.environment
+
+  routes = [
+    {
+      path                = "/images"
+      http_method         = "POST"
+      lambda_function_name = module.upload_function.function_name
+      lambda_invoke_arn   = module.upload_function.function_arn
+      description         = "Upload images endpoint"
+    }
+  ]
+
+  cors_allow_origins  = ["*"]
+  cors_allow_methods  = ["GET", "POST", "PUT", "OPTIONS"]
+  cors_allow_headers  = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key"]
+  cors_allow_credentials = false
+
+  use_custom_domain   = false
+
+  throttling_burst_limit = 10
+  throttling_rate_limit  = 5
+
+  tags                = merge(var.tags, { Environment = var.environment })
 }

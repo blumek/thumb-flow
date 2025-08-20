@@ -22,7 +22,7 @@ localStack {
     accessKeyId.set(testEnvironment["AWS_ACCESS_KEY_ID"]!!)
     secretAccessKey.set(testEnvironment["AWS_SECRET_ACCESS_KEY"]!!)
     buckets.set(listOf(
-        "thumbnail-generator-raw-bucket",
+        "thumbnail-generator-raw-bucket", 
         "thumbnail-generator-thumbnail-bucket"
     ))
     testEnvironmentVariables.set(testEnvironment)
