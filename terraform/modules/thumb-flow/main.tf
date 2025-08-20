@@ -38,9 +38,9 @@ module "upload_function" {
   memory_size   = 256
 
   environment_variables = {
-    AWS_S3_BUCKET_NAME        = module.raw_images_bucket.bucket_name
-    AWS_SQS_QUEUE_URL         = module.thumbnail_generation_queue.queue_url
-    AWS_DDB_RAW_TABLE_NAME    = module.dynamodb.raw_table_name
+    AWS_S3_BUCKET_NAME           = module.raw_images_bucket.bucket_name
+    AWS_SQS_QUEUE_URL            = module.thumbnail_generation_queue.queue_url
+    AWS_DDB_RAW_TABLE_NAME       = module.dynamodb.raw_table_name
     AWS_DDB_PROCESSED_TABLE_NAME = module.dynamodb.processed_table_name
   }
 
@@ -59,11 +59,11 @@ module "thumbnail_generator_function" {
   memory_size   = 512
 
   environment_variables = {
-    AWS_S3_RAW_BUCKET_NAME          = module.raw_images_bucket.bucket_name
-    AWS_S3_THUMBNAIL_BUCKET_NAME    = module.thumbnail_bucket.bucket_name
-    AWS_SQS_QUEUE_URL               = module.thumbnail_generation_queue.queue_url
-    AWS_DDB_RAW_TABLE_NAME          = module.dynamodb.raw_table_name
-    AWS_DDB_PROCESSED_TABLE_NAME    = module.dynamodb.processed_table_name
+    AWS_S3_RAW_BUCKET_NAME       = module.raw_images_bucket.bucket_name
+    AWS_S3_THUMBNAIL_BUCKET_NAME = module.thumbnail_bucket.bucket_name
+    AWS_SQS_QUEUE_URL            = module.thumbnail_generation_queue.queue_url
+    AWS_DDB_RAW_TABLE_NAME       = module.dynamodb.raw_table_name
+    AWS_DDB_PROCESSED_TABLE_NAME = module.dynamodb.processed_table_name
   }
 
   enable_s3_output_policy = true
@@ -224,29 +224,29 @@ resource "aws_iam_role_policy_attachment" "bedrock_access" {
 module "api_gateway" {
   source = "../api-gateway"
 
-  api_name            = "${var.environment}-thumbflow-api"
-  description         = "API Gateway for ThumbFlow ${var.environment} environment"
-  stage_name          = var.environment
+  api_name    = "${var.environment}-thumbflow-api"
+  description = "API Gateway for ThumbFlow ${var.environment} environment"
+  stage_name  = var.environment
 
   routes = [
     {
-      path                = "/images"
-      http_method         = "POST"
+      path                 = "/images"
+      http_method          = "POST"
       lambda_function_name = module.upload_function.function_name
-      lambda_invoke_arn   = module.upload_function.function_arn
-      description         = "Upload images endpoint"
+      lambda_invoke_arn    = module.upload_function.function_arn
+      description          = "Upload images endpoint"
     }
   ]
 
-  cors_allow_origins  = ["*"]
-  cors_allow_methods  = ["GET", "POST", "PUT", "OPTIONS"]
-  cors_allow_headers  = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key"]
+  cors_allow_origins     = ["*"]
+  cors_allow_methods     = ["GET", "POST", "PUT", "OPTIONS"]
+  cors_allow_headers     = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key"]
   cors_allow_credentials = false
 
-  use_custom_domain   = false
+  use_custom_domain = false
 
   throttling_burst_limit = 10
   throttling_rate_limit  = 5
 
-  tags                = merge(var.tags, { Environment = var.environment })
+  tags = merge(var.tags, { Environment = var.environment })
 }

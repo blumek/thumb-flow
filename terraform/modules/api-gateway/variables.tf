@@ -18,11 +18,11 @@ variable "stage_name" {
 variable "routes" {
   description = "List of route configurations for API Gateway"
   type = list(object({
-    path                = string
-    http_method         = string
+    path                 = string
+    http_method          = string
     lambda_function_name = string
-    lambda_invoke_arn   = string
-    description         = optional(string)
+    lambda_invoke_arn    = string
+    description          = optional(string)
   }))
 }
 
