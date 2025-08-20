@@ -23,12 +23,17 @@ output "api_gateway_url" {
   value       = module.api_gateway.stage_endpoint
 }
 
-output "upload_api_endpoint" {
-  description = "Complete URL for the upload endpoint"
-  value       = module.api_gateway.upload_endpoint
-}
-
 output "api_routes" {
   description = "Map of all API routes and their complete URLs"
   value       = module.api_gateway.route_endpoints
+}
+
+output "raw_images_table_name" {
+  description = "Name of the DynamoDB RawImages table"
+  value       = module.dynamodb.raw_table_name
+}
+
+output "processed_images_table_name" {
+  description = "Name of the DynamoDB ProcessedImages table"
+  value       = module.dynamodb.processed_table_name
 }
