@@ -91,14 +91,32 @@ class TestImageUploadIntegration:
             actual_response, s3_bucket, s3_client, sqs_client, sqs_queue
         )
 
-    def given_request(self) -> Dict[str, str]:
-        event: Dict[str, str] = {
+    def given_request(self) -> Dict[str, Any]:
+        payload: Dict[str, str] = {
             "image_name": "test_image",
             "image_extension": "png",
             "image_bytes": base64.b64encode(self.given_image_bytes()).decode("utf-8"),
             "prompt": "Generate a thumbnail for this image",
         }
-        return event
+
+        api_gateway_event: Dict[str, Any] = {
+            "body": json.dumps(payload),
+            "resource": "/{proxy+}",
+            "path": "/upload",
+            "httpMethod": "POST",
+            "isBase64Encoded": False,
+            "headers": {
+                "Content-Type": "application/json",
+                "Accept": "*/*",
+            },
+            "requestContext": {
+                "resourcePath": "/{proxy+}",
+                "httpMethod": "POST",
+                "path": "/upload",
+            },
+        }
+
+        return api_gateway_event
 
     @staticmethod
     def given_image_bytes() -> bytes:
@@ -125,15 +143,23 @@ class TestImageUploadIntegration:
 
     def then_process_passes_as_expected(
         self,
-        actual_response: Dict[str, str],
+        actual_response: Dict[str, Any],
         s3_bucket: str,
         s3_client: S3Client,
         sqs_client: SQSClient,
         sqs_queue: str,
     ) -> None:
+        # Verify the response has the expected API Gateway structure
         assert actual_response["statusCode"] == 200
-        assert "image_key" in actual_response
-        image_key: str = actual_response["image_key"]
+        assert "body" in actual_response
+        assert "headers" in actual_response
+        assert actual_response["headers"].get("Content-Type") == "application/json"
+
+        # Parse the response body from JSON string
+        response_body = json.loads(actual_response["body"])
+        assert "image_key" in response_body
+
+        image_key: str = response_body["image_key"]
         self.then_image_is_available_in_s3(image_key, s3_bucket, s3_client)
         self.verify_sqs_message_emitted(image_key, sqs_client, sqs_queue)
 
