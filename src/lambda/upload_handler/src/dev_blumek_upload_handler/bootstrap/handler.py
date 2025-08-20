@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 from typing import Dict, Any
 
@@ -19,26 +20,71 @@ logger = logging.getLogger(__name__)
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     try:
+        body: dict[str, Any] = __extract_body_from_api_gateway_event(event)
+
         initialize_thumbnail_generation_request: (
             InitializeThumbnailGenerationUseCaseRequest
-        ) = __to_initialize_thumbnail_generation_request(event)
+        ) = __to_initialize_thumbnail_generation_request(body)
         initialize_thumbnail_generation_reply: (
             InitializeThumbnailGenerationUseCaseReply
         ) = use_case.upload_image(initialize_thumbnail_generation_request)
+
         return {
             "statusCode": 200,
-            "image_key": initialize_thumbnail_generation_reply.image_key,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",  # CORS header for API Gateway
+            },
+            "body": json.dumps(
+                {"image_key": initialize_thumbnail_generation_reply.image_key}
+            ),
         }
     except KeyError as e:
         logger.error(f"Missing required field in event: {e}")
-        return {"statusCode": 400, "body": f"Missing required field: {e}"}
+        return {
+            "statusCode": 400,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
+            "body": json.dumps({"error": f"Missing required field: {str(e)}"}),
+        }
     except Exception as e:
         logger.error(f"Error processing request: {e}")
-        return {"statusCode": 500, "body": f"Internal server error: {e}"}
+        return {
+            "statusCode": 500,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
+            "body": json.dumps({"error": f"Internal server error: {str(e)}"}),
+        }
+
+
+def __extract_body_from_api_gateway_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        body = event["body"]
+    except KeyError:
+        logger.error("No body found in event")
+        raise KeyError("body")
+
+    if isinstance(body, str):
+        try:
+            return json.loads(body)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse body as JSON: {e}")
+            raise ValueError(f"Invalid JSON in request body: {e}")
+
+    if isinstance(body, dict):
+        return body
+
+    error_msg = f"Unexpected body type: {type(body).__name__}"
+    logger.error(error_msg)
+    raise ValueError(error_msg)
 
 
 def __to_initialize_thumbnail_generation_request(
-    event: Dict[str, Any],
+    body: Dict[str, Any],
 ) -> InitializeThumbnailGenerationUseCaseRequest:
     required_fields: list[str] = [
         "image_name",
@@ -47,12 +93,12 @@ def __to_initialize_thumbnail_generation_request(
         "prompt",
     ]
     for field in required_fields:
-        if field not in event:
+        if field not in body:
             raise KeyError(field)
 
     return InitializeThumbnailGenerationUseCaseRequest(
-        image_name=event["image_name"],
-        image_extension=ImageExtension.from_extension(event["image_extension"]),
-        image_bytes=base64.b64decode(event["image_bytes"]),
-        prompt=event["prompt"],
+        image_name=body["image_name"],
+        image_extension=ImageExtension.from_extension(body["image_extension"]),
+        image_bytes=base64.b64decode(body["image_bytes"]),
+        prompt=body["prompt"],
     )

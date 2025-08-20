@@ -43,3 +43,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "cors_allow_origins" {
+  description = "List of allowed origins for CORS in API Gateway"
+  type        = list(string)
+  default     = ["*"]
+}
