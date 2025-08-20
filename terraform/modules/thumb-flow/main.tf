@@ -21,6 +21,14 @@ module "thumbnail_generation_queue" {
   tags                       = merge(var.tags, { Environment = var.environment })
 }
 
+module "dynamodb" {
+  source = "../dynamodb"
+
+  raw_table_name       = var.raw_images_table_name
+  processed_table_name = var.processed_images_table_name
+  tags                 = merge(var.tags, { Environment = var.environment })
+}
+
 module "upload_function" {
   source = "../lambda"
 
@@ -30,8 +38,10 @@ module "upload_function" {
   memory_size   = 256
 
   environment_variables = {
-    AWS_S3_BUCKET_NAME = module.raw_images_bucket.bucket_name
-    AWS_SQS_QUEUE_URL  = module.thumbnail_generation_queue.queue_url
+    AWS_S3_BUCKET_NAME        = module.raw_images_bucket.bucket_name
+    AWS_SQS_QUEUE_URL         = module.thumbnail_generation_queue.queue_url
+    AWS_DDB_RAW_TABLE_NAME    = module.dynamodb.raw_table_name
+    AWS_DDB_PROCESSED_TABLE_NAME = module.dynamodb.processed_table_name
   }
 
   enable_s3_output_policy = true
@@ -45,13 +55,15 @@ module "thumbnail_generator_function" {
 
   function_name = var.thumbnail_generator_function_name
   image_uri     = var.thumbnail_generator_image_uri
-  timeout       = 120 # Zwiększony timeout dla przetwarzania obrazów
-  memory_size   = 512 # Zwiększona pamięć dla operacji na obrazach
+  timeout       = 120
+  memory_size   = 512
 
   environment_variables = {
-    AWS_S3_RAW_BUCKET_NAME       = module.raw_images_bucket.bucket_name
-    AWS_S3_THUMBNAIL_BUCKET_NAME = module.thumbnail_bucket.bucket_name
-    AWS_SQS_QUEUE_URL            = module.thumbnail_generation_queue.queue_url
+    AWS_S3_RAW_BUCKET_NAME          = module.raw_images_bucket.bucket_name
+    AWS_S3_THUMBNAIL_BUCKET_NAME    = module.thumbnail_bucket.bucket_name
+    AWS_SQS_QUEUE_URL               = module.thumbnail_generation_queue.queue_url
+    AWS_DDB_RAW_TABLE_NAME          = module.dynamodb.raw_table_name
+    AWS_DDB_PROCESSED_TABLE_NAME    = module.dynamodb.processed_table_name
   }
 
   enable_s3_output_policy = true
@@ -135,6 +147,47 @@ resource "aws_iam_policy" "thumbnail_function_sqs_receive" {
 resource "aws_iam_role_policy_attachment" "thumbnail_function_sqs_receive" {
   role       = module.thumbnail_generator_function.execution_role_name
   policy_arn = aws_iam_policy.thumbnail_function_sqs_receive.arn
+}
+
+resource "aws_iam_policy" "dynamodb_access" {
+  name        = "${var.environment}-thumbflow-dynamodb-access"
+  description = "Permissions for Lambda functions to access DynamoDB tables"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:BatchGetItem",
+          "dynamodb:DescribeTable"
+        ]
+        Resource = [
+          module.dynamodb.raw_table_arn,
+          "${module.dynamodb.raw_table_arn}/index/*",
+          module.dynamodb.processed_table_arn,
+          "${module.dynamodb.processed_table_arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "upload_function_dynamodb_access" {
+  role       = module.upload_function.execution_role_name
+  policy_arn = aws_iam_policy.dynamodb_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "thumbnail_function_dynamodb_access" {
+  role       = module.thumbnail_generator_function.execution_role_name
+  policy_arn = aws_iam_policy.dynamodb_access.arn
 }
 
 resource "aws_lambda_event_source_mapping" "thumbnail_generator_sqs_trigger" {

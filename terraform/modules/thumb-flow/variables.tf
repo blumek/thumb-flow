@@ -38,6 +38,16 @@ variable "thumbnail_generator_image_uri" {
   type        = string
 }
 
+variable "raw_images_table_name" {
+  description = "Name of the DynamoDB table for raw images"
+  type        = string
+}
+
+variable "processed_images_table_name" {
+  description = "Name of the DynamoDB table for processed images"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to the Lambda functions and S3 buckets"
   type        = map(string)
