@@ -25,6 +25,7 @@ class S3ImageRepository(ImageRepository):
                 Key=request.image_key,
                 Body=request.image_bytes,
                 ContentType=request.image_extension.mime_type,
+                Metadata=self.__to_metadata(request),
             )
             return StoreImageReply(image_key=request.image_key)
         except Exception as exception:
@@ -32,6 +33,10 @@ class S3ImageRepository(ImageRepository):
             raise S3UploadError(
                 f"Failed to store image: {request.image_key}"
             ) from exception
+
+    @staticmethod
+    def __to_metadata(request: StoreImageRequest) -> dict[str, str]:
+        return {"workflow_id": request.workflow_id}
 
 
 class S3UploadError(Exception):

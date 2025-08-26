@@ -12,12 +12,13 @@ val testEnvironment = mapOf(
     "AWS_S3_BUCKET_NAME" to "upload-handler-test-bucket",
     "AWS_ENDPOINT_URL" to "http://localhost:4566",
     "AWS_SQS_QUEUE_URL" to "http://localhost:4566/000000000000/upload-handler-test-queue",
+    "AWS_DYNAMODB_TABLE_NAME" to "upload-handler-test-table",
 )
 
 localStack {
     containerName.set("upload-handler-localstack")
     port.set(4566)
-    services.set("s3,sqs")
+    services.set("s3,sqs,dynamodb")
     region.set(testEnvironment["AWS_REGION"]!!)
     accessKeyId.set(testEnvironment["AWS_ACCESS_KEY_ID"]!!)
     secretAccessKey.set(testEnvironment["AWS_SECRET_ACCESS_KEY"]!!)

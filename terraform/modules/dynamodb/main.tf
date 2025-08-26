@@ -9,6 +9,17 @@ resource "aws_dynamodb_table" "raw_images" {
     type = "S"
   }
 
+  attribute {
+    name = "workflow_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "workflow-id-index"
+    hash_key        = "workflow_id"
+    projection_type = "ALL"
+  }
+
   tags = var.tags
 }
 
@@ -21,6 +32,17 @@ resource "aws_dynamodb_table" "processed_images" {
   attribute {
     name = "id"
     type = "S"
+  }
+
+  attribute {
+    name = "workflow_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "workflow-id-index"
+    hash_key        = "workflow_id"
+    projection_type = "ALL"
   }
 
   tags = var.tags

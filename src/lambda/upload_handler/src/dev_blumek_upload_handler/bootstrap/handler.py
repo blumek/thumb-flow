@@ -29,36 +29,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
             InitializeThumbnailGenerationUseCaseReply
         ) = use_case.upload_image(initialize_thumbnail_generation_request)
 
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",  # CORS header for API Gateway
-            },
-            "body": json.dumps(
-                {"image_key": initialize_thumbnail_generation_reply.image_key}
-            ),
-        }
-    except KeyError as e:
-        logger.error(f"Missing required field in event: {e}")
-        return {
-            "statusCode": 400,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            },
-            "body": json.dumps({"error": f"Missing required field: {str(e)}"}),
-        }
-    except Exception as e:
-        logger.error(f"Error processing request: {e}")
-        return {
-            "statusCode": 500,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            },
-            "body": json.dumps({"error": f"Internal server error: {str(e)}"}),
-        }
+        return __to_reply(initialize_thumbnail_generation_reply)
+    except KeyError as exception:
+        logger.error(f"Missing required field in event: {exception}")
+        return __to_failed_reply(exception)
+    except Exception as exception:
+        logger.error(f"Error processing request: {exception}")
+        return __to_generic_error_reply(exception)
 
 
 def __extract_body_from_api_gateway_event(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -110,3 +87,43 @@ def __to_initialize_thumbnail_generation_request(
         image_bytes=base64.b64decode(body["image_bytes"]),
         prompt=body["prompt"],
     )
+
+
+def __to_reply(
+    initialize_thumbnail_generation_reply: InitializeThumbnailGenerationUseCaseReply,
+) -> Dict[str, Any]:
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps(
+            {
+                "workflow_id": initialize_thumbnail_generation_reply.workflow_id,
+                "image_key": initialize_thumbnail_generation_reply.image_key,
+            }
+        ),
+    }
+
+
+def __to_failed_reply(exception: Exception) -> Dict[str, Any]:
+    return {
+        "statusCode": 400,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps({"error": f"Missing required field: {str(exception)}"}),
+    }
+
+
+def __to_generic_error_reply(exception: Exception) -> Dict[str, Any]:
+    return {
+        "statusCode": 500,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps({"error": f"Internal server error: {str(exception)}"}),
+    }

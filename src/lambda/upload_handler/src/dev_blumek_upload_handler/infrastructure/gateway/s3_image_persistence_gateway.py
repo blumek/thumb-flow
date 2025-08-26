@@ -57,6 +57,7 @@ class S3ImagePersistenceGateway(ImagePersistenceGateway):
         request: StoreImageGatewayRequest, s3_key: str
     ) -> StoreImageRequest:
         return StoreImageRequest(
+            workflow_id=request.workflow_id,
             image_key=s3_key,
             image_extension=request.image_extension,
             image_bytes=request.image_bytes,
