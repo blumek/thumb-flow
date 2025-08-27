@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 from unittest.mock import Mock
 
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
@@ -26,7 +27,7 @@ from dev_blumek_upload_handler.infrastructure.repository.image_repository_model 
 
 
 class TestS3ImagePersistenceGateway(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.image_repository: ImageRepository = Mock(spec=ImageRepository)
         self.image_policy: ImagePolicy = Mock(spec=ImagePolicy)
@@ -67,6 +68,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
     @staticmethod
     def given_store_image_gateway_request() -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
+            workflow_id="given_workflow_id",
             image_name="given_image_name",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",
@@ -117,6 +119,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
     @staticmethod
     def given_expected_store_image_request() -> StoreImageRequest:
         return StoreImageRequest(
+            workflow_id="given_workflow_id",
             image_key="given_s3_key",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",

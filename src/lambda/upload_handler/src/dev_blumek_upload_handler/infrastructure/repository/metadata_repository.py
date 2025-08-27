@@ -1,0 +1,12 @@
+from abc import ABC, abstractmethod
+
+from dev_blumek_upload_handler.infrastructure.repository.metadata_repository_model import (
+    StoreMetadataRequest,
+    StoreMetadataReply,
+)
+
+
+class MetadataRepository(ABC):
+    @abstractmethod
+    def store(self, store_metadata_request: StoreMetadataRequest) -> StoreMetadataReply:
+        pass

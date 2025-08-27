@@ -30,6 +30,7 @@ class TestImagePolicyExtension(unittest.TestCase):
         given_extension: ImageExtension,
     ) -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
+            workflow_id="given_workflow_id",
             image_name="given_name",
             image_extension=given_extension,
             image_bytes=b"given_image_bytes",
