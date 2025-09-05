@@ -11,13 +11,14 @@ val testEnvironment = mapOf(
     "AWS_REGION" to "us-east-1",
     "AWS_S3_RAW_BUCKET_NAME" to "thumbnail-generator-raw-bucket",
     "AWS_S3_THUMBNAIL_BUCKET_NAME" to "thumbnail-generator-thumbnail-bucket",
-    "AWS_ENDPOINT_URL" to "http://localhost:4567"
+    "AWS_ENDPOINT_URL" to "http://localhost:4567",
+    "AWS_DYNAMODB_TABLE_NAME" to "thumbnail-generator-test-table"
 )
 
 localStack {
     containerName.set("thumbnail-generator-localstack")
     port.set(4567)
-    services.set("s3")
+    services.set("s3,dynamodb")
     region.set(testEnvironment["AWS_REGION"]!!)
     accessKeyId.set(testEnvironment["AWS_ACCESS_KEY_ID"]!!)
     secretAccessKey.set(testEnvironment["AWS_SECRET_ACCESS_KEY"]!!)

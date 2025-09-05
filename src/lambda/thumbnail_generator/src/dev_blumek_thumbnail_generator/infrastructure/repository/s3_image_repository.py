@@ -71,6 +71,7 @@ class S3ImageRepository(ImageRepository):
                 Key=request.image_key,
                 Body=request.image_bytes,
                 ContentType=request.image_extension.mime_type,
+                Metadata={"workflow_id": request.workflow_id},
             )
             return StoreImageReply(image_key=request.image_key)
         except Exception as exception:

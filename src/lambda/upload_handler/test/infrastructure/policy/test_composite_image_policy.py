@@ -23,6 +23,7 @@ class TestImagePolicyComposite(unittest.TestCase):
     @staticmethod
     def given_store_image_gateway_request() -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
+            workflow_id="given_workflow_id",
             image_name="given_name",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",

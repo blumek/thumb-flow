@@ -13,4 +13,5 @@ class InitializeThumbnailGenerationUseCaseRequest:
 
 @dataclass(frozen=True)
 class InitializeThumbnailGenerationUseCaseReply:
+    workflow_id: str
     image_key: str

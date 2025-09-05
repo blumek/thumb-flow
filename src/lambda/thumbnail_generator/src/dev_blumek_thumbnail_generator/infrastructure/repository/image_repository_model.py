@@ -17,6 +17,7 @@ class RetrieveImageReply:
 
 @dataclass(frozen=True)
 class StoreImageRequest:
+    workflow_id: str
     image_key: str
     image_extension: ImageExtension
     image_bytes: bytes

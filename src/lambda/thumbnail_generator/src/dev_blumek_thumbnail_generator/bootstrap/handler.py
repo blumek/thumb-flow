@@ -20,6 +20,12 @@ error_mappings: Dict[Type[Exception], Tuple[int, str]] = {
     Exception: (500, "Internal server error"),
 }
 
+required_fields: list[str] = [
+    "workflow_id",
+    "uploaded_image_key",
+    "prompt",
+]
+
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     if not event.get("Records"):
@@ -72,15 +78,15 @@ def _to_generate_thumbnail_request(
             json.loads(record["body"]) if "body" in record else record
         )
 
-        image_key = message_body.get("uploaded_image_key")
-        if not image_key:
-            raise KeyError("uploaded_image_key")
+        for field in required_fields:
+            if field not in message_body:
+                raise KeyError(field)
 
-        prompt = message_body.get("prompt")
-        if not prompt:
-            raise KeyError("prompt")
-
-        return GenerateThumbnailUseCaseRequest(image_key=image_key, prompt=prompt)
+        return GenerateThumbnailUseCaseRequest(
+            workflow_id=message_body["workflow_id"],
+            image_key=message_body["uploaded_image_key"],
+            prompt=message_body["prompt"],
+        )
     except json.JSONDecodeError:
         logger.error("Invalid JSON in SQS message body")
         raise ValueError("Invalid JSON in SQS message body")

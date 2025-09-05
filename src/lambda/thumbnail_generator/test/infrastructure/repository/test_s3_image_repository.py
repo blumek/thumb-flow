@@ -41,6 +41,7 @@ class TestS3ImageRepository(unittest.TestCase):
     @staticmethod
     def given_store_image_request() -> StoreImageRequest:
         return StoreImageRequest(
+            workflow_id="given_workflow_id",
             image_key="given_image_key",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",
@@ -61,6 +62,7 @@ class TestS3ImageRepository(unittest.TestCase):
             Key="given_image_key",
             Body=b"given_image_bytes",
             ContentType="image/png",
+            Metadata={"workflow_id": "given_workflow_id"},
         )
 
     def test_should_raise_s3_upload_error_when_s3_client_fails(self) -> None:
