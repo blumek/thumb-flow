@@ -14,6 +14,9 @@ module "thumb_flow" {
   thumbnail_generator_function_name = "thumbflow-thumbnail-generator-dev"
   thumbnail_generator_image_uri     = var.thumbnail_generator_image_uri
 
+  raw_images_table_name       = "thumbflow-raw-images-dev"
+  processed_images_table_name = "thumbflow-processed-images-dev"
+
   tags = {
     Project     = "ThumbFlow"
     Environment = "dev"

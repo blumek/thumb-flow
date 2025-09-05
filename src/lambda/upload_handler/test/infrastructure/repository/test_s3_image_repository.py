@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 from unittest.mock import Mock
 
 from dev_blumek_upload_handler.domain.types.image_extension import ImageExtension
@@ -13,7 +14,7 @@ from dev_blumek_upload_handler.infrastructure.repository.s3_image_repository imp
 
 
 class TestS3ImageRepository(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.s3_client = Mock()
         self.bucket_name: str = "given_bucket_name"
@@ -35,6 +36,7 @@ class TestS3ImageRepository(unittest.TestCase):
     @staticmethod
     def given_store_image_request() -> StoreImageRequest:
         return StoreImageRequest(
+            workflow_id="given_workflow_id",
             image_key="given_image_key",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",
@@ -55,6 +57,7 @@ class TestS3ImageRepository(unittest.TestCase):
             Key="given_image_key",
             Body=b"given_image_bytes",
             ContentType="image/png",
+            Metadata={"workflow_id": "given_workflow_id"},
         )
 
     def test_should_raise_s3_upload_error_when_s3_client_fails(self):

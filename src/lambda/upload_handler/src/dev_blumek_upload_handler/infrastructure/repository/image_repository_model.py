@@ -5,6 +5,7 @@ from dev_blumek_upload_handler.domain.types.image_extension import ImageExtensio
 
 @dataclass(frozen=True)
 class StoreImageRequest:
+    workflow_id: str
     image_key: str
     image_extension: ImageExtension
     image_bytes: bytes

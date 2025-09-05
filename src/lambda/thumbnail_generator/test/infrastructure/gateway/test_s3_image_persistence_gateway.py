@@ -57,6 +57,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
     @staticmethod
     def given_store_image_gateway_request() -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
+            workflow_id="given_workflow_id",
             image_name="given_image_name",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",
@@ -93,6 +94,7 @@ class TestS3ImagePersistenceGateway(unittest.TestCase):
     @staticmethod
     def given_expected_store_image_request() -> StoreImageRequest:
         return StoreImageRequest(
+            workflow_id="given_workflow_id",
             image_key="given_s3_key",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_image_bytes",
