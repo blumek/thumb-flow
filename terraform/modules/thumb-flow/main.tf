@@ -61,8 +61,7 @@ module "thumbnail_generator_function" {
     AWS_S3_RAW_BUCKET_NAME       = module.raw_images_bucket.bucket_name
     AWS_S3_THUMBNAIL_BUCKET_NAME = module.thumbnail_bucket.bucket_name
     AWS_SQS_QUEUE_URL            = module.thumbnail_generation_queue.queue_url
-    AWS_DDB_RAW_TABLE_NAME       = module.dynamodb.raw_table_name
-    AWS_DDB_PROCESSED_TABLE_NAME = module.dynamodb.processed_table_name
+    AWS_DYNAMODB_TABLE_NAME      = module.dynamodb.processed_table_name
   }
 
   enable_s3_output_policy = true

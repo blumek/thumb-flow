@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import Mock
 
-from dev_blumek_thumbnail_generator.application.use_case.generate_thumbnail_service import (
-    GenerateThumbnailService,
-)
 from dev_blumek_thumbnail_generator.application.use_case.generate_thumbail_use_case_model import (
     GenerateThumbnailUseCaseRequest,
     GenerateThumbnailUseCaseReply,
+)
+from dev_blumek_thumbnail_generator.application.use_case.generate_thumbnail_service import (
+    GenerateThumbnailService,
 )
 from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExtension
 from dev_blumek_thumbnail_generator.infrastructure.gateway.image_persistence_gateway import (
@@ -22,6 +22,12 @@ from dev_blumek_thumbnail_generator.infrastructure.gateway.image_query_gateway i
 from dev_blumek_thumbnail_generator.infrastructure.gateway.image_query_gateway_model import (
     RetrieveImageGatewayReply,
     RetrieveImageGatewayRequest,
+)
+from dev_blumek_thumbnail_generator.infrastructure.gateway.metadata_persistence_gateway import (
+    MetadataPersistenceGateway,
+)
+from dev_blumek_thumbnail_generator.infrastructure.gateway.metadata_perstistence_gateway_model import (
+    StoreMetadataGatewayRequest,
 )
 from dev_blumek_thumbnail_generator.infrastructure.generator.thumbnail_generator import (
     ThumbnailGenerator,
@@ -40,11 +46,15 @@ class TestGenerateThumbnailService(unittest.TestCase):
             spec=ImagePersistenceGateway
         )
         self.thumbnail_generator: ThumbnailGenerator = Mock(spec=ThumbnailGenerator)
+        self.metadata_persistence_gateway: MetadataPersistenceGateway = Mock(
+            spec=MetadataPersistenceGateway
+        )
         self.generate_thumbnail_service: GenerateThumbnailService = (
             GenerateThumbnailService(
                 self.image_query_gateway,
                 self.image_persistence_gateway,
                 self.thumbnail_generator,
+                self.metadata_persistence_gateway,
             )
         )
 
@@ -96,7 +106,9 @@ class TestGenerateThumbnailService(unittest.TestCase):
     @staticmethod
     def given_generate_thumbnail_use_case_request() -> GenerateThumbnailUseCaseRequest:
         return GenerateThumbnailUseCaseRequest(
-            image_key="given_image_key", prompt="given_prompt"
+            workflow_id="given_workflow_id",
+            image_key="given_image_key",
+            prompt="given_prompt",
         )
 
     @staticmethod
@@ -152,9 +164,32 @@ class TestGenerateThumbnailService(unittest.TestCase):
     @staticmethod
     def given_expected_store_image_gateway_request() -> StoreImageGatewayRequest:
         return StoreImageGatewayRequest(
+            workflow_id="given_workflow_id",
             image_name="given_name",
             image_extension=ImageExtension.PNG,
             image_bytes=b"given_thumbnail_bytes",
+        )
+
+    def test_should_call_the_underlying_metadata_persistence_gateway_to_store_metadata(
+        self,
+    ):
+        self.given_image_can_be_retrieved()
+        self.given_thumbnail_can_be_generated()
+        self.given_thumbnail_can_be_stored()
+        given_request: GenerateThumbnailUseCaseRequest = (
+            self.given_generate_thumbnail_use_case_request()
+        )
+
+        self.generate_thumbnail_service.generate_thumbnail(given_request)
+
+        self.metadata_persistence_gateway.store.assert_called_once_with(
+            self.given_expected_store_metadata_gateway_request()
+        )
+
+    @staticmethod
+    def given_expected_store_metadata_gateway_request() -> StoreMetadataGatewayRequest:
+        return StoreMetadataGatewayRequest(
+            workflow_id="given_workflow_id", image_key="given_thumbnail_key"
         )
 
 

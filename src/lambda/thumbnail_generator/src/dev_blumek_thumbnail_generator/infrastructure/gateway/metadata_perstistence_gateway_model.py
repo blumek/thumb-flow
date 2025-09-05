@@ -2,12 +2,11 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class GenerateThumbnailUseCaseRequest:
+class StoreMetadataGatewayRequest:
     workflow_id: str
     image_key: str
-    prompt: str
 
 
 @dataclass(frozen=True)
-class GenerateThumbnailUseCaseReply:
-    thumbnail_key: str
+class StoreMetadataGatewayReply:
+    id: str

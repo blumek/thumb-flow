@@ -2,8 +2,27 @@ import os
 from typing import Optional
 
 import boto3
+from dev_blumek_thumbnail_generator.infrastructure.factory.metadata_identifier_factory import (
+    MetadataIdentifierFactory,
+)
+from dev_blumek_thumbnail_generator.infrastructure.factory.unique_metadata_identifier_factory import (
+    UniqueMetadataIdentifierFactory,
+)
+from dev_blumek_thumbnail_generator.infrastructure.repository.dynamodb_metadata_repository import (
+    DynamoDBMetadataRepository,
+)
+from dev_blumek_thumbnail_generator.infrastructure.repository.metadata_repository import (
+    MetadataRepository,
+)
+from dev_blumek_thumbnail_generator.infrastructure.gateway.metadata_persistence_gateway import (
+    MetadataPersistenceGateway,
+)
+from dev_blumek_thumbnail_generator.infrastructure.gateway.dynamodb_metadata_persistence_gateway import (
+    DynamoDBMetadataPersistenceGateway,
+)
 from mypy_boto3_s3.client import S3Client
 from mypy_boto3_bedrock_runtime import BedrockRuntimeClient
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 
 from dev_blumek_thumbnail_generator.application.use_case.generate_thumbail_use_case import (
     GenerateThumbnailUseCase,
@@ -67,6 +86,14 @@ def generate_thumbnail_use_case() -> GenerateThumbnailUseCase:
             bedrock_client=bedrock_client(aws_region=aws_region()),
             configuration=bedrock_configuration(),
             seed_generator=seed_generator(),
+        ),
+        metadata_persistence_gateway=metadata_persistence_gateway(
+            metadata_repository=dynamodb_metadata_repository(
+                dynamodb_table=dynamodb_table(
+                    aws_region=aws_region(), table_name=table_name()
+                ),
+                metadata_identifier_factory=metadata_identifier_factory(),
+            ),
         ),
     )
 
@@ -137,6 +164,35 @@ def bedrock_configuration() -> BedrockConfiguration:
 
 def seed_generator() -> SeedGenerator:
     return RandomSeedGenerator()
+
+
+def metadata_persistence_gateway(
+    metadata_repository: MetadataRepository,
+) -> MetadataPersistenceGateway:
+    return DynamoDBMetadataPersistenceGateway(metadata_repository=metadata_repository)
+
+
+def dynamodb_metadata_repository(
+    dynamodb_table: Table, metadata_identifier_factory: MetadataIdentifierFactory
+) -> MetadataRepository:
+    return DynamoDBMetadataRepository(dynamodb_table, metadata_identifier_factory)
+
+
+def dynamodb_table(aws_region: str, table_name: str) -> Table:
+    dynamodb = dynamodb_resource(aws_region=aws_region)
+    return dynamodb.Table(table_name)
+
+
+def dynamodb_resource(aws_region: str) -> DynamoDBServiceResource:
+    return boto3.resource("dynamodb", region_name=aws_region)
+
+
+def table_name() -> str:
+    return load_variable("AWS_DYNAMODB_TABLE_NAME")
+
+
+def metadata_identifier_factory() -> MetadataIdentifierFactory:
+    return UniqueMetadataIdentifierFactory()
 
 
 def load_variable(variable_name: str, default_value: Optional[str] = None) -> str:
