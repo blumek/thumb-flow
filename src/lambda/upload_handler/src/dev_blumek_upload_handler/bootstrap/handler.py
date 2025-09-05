@@ -1,7 +1,7 @@
 import base64
 import json
 import logging
-from typing import Dict, Any, cast
+from typing import Dict, Any, cast, Tuple, Type
 
 from aws_lambda_typing.context import Context as LambdaContext
 
@@ -17,6 +17,19 @@ from dev_blumek_upload_handler.application.use_case.initialize_thumbnail_generat
 use_case = init_use_case()
 logger = logging.getLogger(__name__)
 
+error_mappings: Dict[Type[Exception], Tuple[int, str]] = {
+    KeyError: (400, "Missing required field"),
+    ValueError: (400, "Invalid data format"),
+    Exception: (500, "Internal server error"),
+}
+
+required_fields: list[str] = [
+    "image_name",
+    "image_extension",
+    "image_bytes",
+    "prompt",
+]
+
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     try:
@@ -30,12 +43,16 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         ) = use_case.upload_image(initialize_thumbnail_generation_request)
 
         return __to_reply(initialize_thumbnail_generation_reply)
-    except KeyError as exception:
-        logger.error(f"Missing required field in event: {exception}")
-        return __to_failed_reply(exception)
     except Exception as exception:
-        logger.error(f"Error processing request: {exception}")
-        return __to_generic_error_reply(exception)
+        error_type: Type[Exception] = type(exception)
+        status_code: int
+        message_prefix: str
+        status_code, message_prefix = error_mappings.get(
+            error_type, error_mappings[Exception]
+        )
+
+        logger.error(f"{message_prefix}: {exception}")
+        return __to_error_reply(status_code, f"{message_prefix}: {str(exception)}")
 
 
 def __extract_body_from_api_gateway_event(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -71,12 +88,6 @@ def __as_dict(body: Any) -> Dict[str, Any]:
 def __to_initialize_thumbnail_generation_request(
     body: Dict[str, Any],
 ) -> InitializeThumbnailGenerationUseCaseRequest:
-    required_fields: list[str] = [
-        "image_name",
-        "image_extension",
-        "image_bytes",
-        "prompt",
-    ]
     for field in required_fields:
         if field not in body:
             raise KeyError(field)
@@ -107,23 +118,12 @@ def __to_reply(
     }
 
 
-def __to_failed_reply(exception: Exception) -> Dict[str, Any]:
+def __to_error_reply(status_code: int, message: str) -> Dict[str, Any]:
     return {
-        "statusCode": 400,
+        "statusCode": status_code,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         },
-        "body": json.dumps({"error": f"Missing required field: {str(exception)}"}),
-    }
-
-
-def __to_generic_error_reply(exception: Exception) -> Dict[str, Any]:
-    return {
-        "statusCode": 500,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-        },
-        "body": json.dumps({"error": f"Internal server error: {str(exception)}"}),
+        "body": json.dumps({"error": message}),
     }

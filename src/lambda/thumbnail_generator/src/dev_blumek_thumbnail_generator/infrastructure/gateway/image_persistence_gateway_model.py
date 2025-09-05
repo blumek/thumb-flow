@@ -5,6 +5,7 @@ from dev_blumek_thumbnail_generator.domain.types.image_extension import ImageExt
 
 @dataclass(frozen=True)
 class StoreImageGatewayRequest:
+    workflow_id: str
     image_name: str
     image_extension: ImageExtension
     image_bytes: bytes
